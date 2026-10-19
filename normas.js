@@ -10,7 +10,7 @@ const DOCUMENTOS = {
     resolucao: 'Resolução nº 38/2013/CONSUP/IFTO, convalidada pela Resolução nº 23/2015',
     data: '2015-06-25',
     situacao: 'vigente',
-    link: 'https://www.ifto.edu.br/ifto/colegiados/consup/documentos-aprovados/regulamentos/cursos-tecnicos/regulamento-odp-cursos-medio-tecnico-presenciais-ifto-2edicao.pdf/view'
+    link: 'https://www.ifto.edu.br/ifto/colegiados/consup/documentos-aprovados/regulamentos/cursos-tecnicos/regulamento-odp-cursos-medio-tecnico-presenciais-ifto-2edicao.pdf'
   },
   polae: {
     nome: 'Política de Assistência Estudantil do IFTO',
@@ -26,7 +26,7 @@ const DOCUMENTOS = {
     resolucao: 'Revogada pela Resolução Consup nº 23/2015',
     data: '2015-06-25',
     situacao: 'revogada',
-    link: 'https://www.ifto.edu.br/ifto/colegiados/consup/documentos-aprovados/regulamentos/cursos-tecnicos/regulamento-odp-cursos-tecnicos-presenciais-ifto-1edicao.pdf/view'
+    link: 'https://www.ifto.edu.br/ifto/colegiados/consup/documentos-aprovados/regulamentos/cursos-tecnicos/regulamento-odp-cursos-tecnicos-presenciais-ifto-1edicao.pdf'
   }
 };
 
@@ -179,3 +179,48 @@ const NORMAS = [
     texto:'Esta é a 1ª edição do Regulamento da Organização Didático-Pedagógica dos cursos técnicos presenciais, revogada pela Resolução Consup nº 23/2015. Não deve ser usada como referência: a versão vigente é a 2ª edição.',
     tags:'regulamento antigo primeira edicao revogada versao anterior 2011 desatualizada' }
 ];
+
+/* Explicações em linguagem simples, pré-geradas por IA a partir do campo "texto"
+   de cada artigo. São usadas quando não há endpoint de IA configurado em app.js
+   (CONFIG_IA). A explicação nunca substitui o texto do artigo: a interface sempre
+   mostra o texto primeiro e a explicação depois. Ao trocar "texto" pelo texto
+   literal, gere de novo a explicação correspondente. */
+const EXPLICACOES = {
+  'odp-73-i': 'Você precisa estar presente em pelo menos 75% de todas as aulas do período letivo. Se as faltas passarem de um quarto da carga horária, você não cumpre esse requisito de aprovação.',
+  'odp-73-ii': 'Você precisa fechar o período com média final 6,0 ou mais em cada componente curricular. Não basta a média geral chegar a 6,0: cada disciplina precisa chegar lá.',
+  'odp-71-pu': 'Sua média final é a soma das médias de cada bimestre (ou trimestre) dividida pelo número de etapas. Exemplo: 5,0, 7,0, 6,0 e 8,0 nos quatro bimestres dão média final 6,5.',
+  'odp-74': 'Ir às aulas é obrigatório. A falta só pode ser abonada nas situações que a lei prevê expressamente; fora delas, ela conta na sua frequência.',
+  'odp-12-viii': 'Se suas faltas passarem de 12,5% da carga horária, a escola é obrigada a avisar os órgãos de proteção previstos em lei, como o Conselho Tutelar. Não é uma punição: é um dever da instituição.',
+  'odp-75': 'Se você perdeu uma prova ou não entregou um trabalho, pode pedir uma nova oportunidade à Direção ou Gerência de Ensino. O prazo é de até 72 horas úteis depois que o motivo da ausência terminar, e você precisa comprovar o impedimento, por exemplo com atestado médico. Os motivos aceitos estão listados no parágrafo único do artigo.',
+  'odp-80': 'A recuperação acontece ao longo do período, não só no fim. Se sua nota numa etapa ficar abaixo de 6,0, o professor deve oferecer recuperação. Se você tirar mais na recuperação, a nova nota substitui a anterior.',
+  'odp-81': 'A recuperação pode ser feita na própria sala de aula ou no horário de atendimento do professor. Pergunte a ele quando e onde vai ser a sua.',
+  'odp-83': 'O conselho de classe reúne a Direção ou Gerência de Ensino, os professores da sua turma, o coordenador do curso ou da área, alguém da equipe técnico-pedagógica e um representante dos estudantes. Ou seja, os alunos têm voz nele.',
+  'odp-85': 'O conselho de classe se reúne normalmente ao fim de cada etapa do período letivo. Fora disso, só se reúne quando é convocado.',
+  'odp-86-87': 'Se você terminar o período com média abaixo de 6,0, o conselho de classe analisa seu caso. Ele pode aprovar você se sua média global for 5,0 ou mais e/ou se você estiver abaixo de 6,0 em no máximo metade das disciplinas. É uma possibilidade, não uma garantia.',
+  'odp-110': 'Você pode trancar a matrícula em situações como serviço militar, tratamento de saúde prolongado, gravidez com atestado médico ou para acompanhar cônjuge ou parente de primeiro grau em tratamento. Atenção: no primeiro ano, semestre ou módulo do curso o trancamento não é permitido, salvo as exceções previstas em lei.',
+  'odp-111': 'Se você trancou a matrícula, tem até dois semestres letivos para reabri-la. Passado esse prazo sem reabrir, a matrícula é cancelada.',
+  'odp-40': 'Sua matrícula pode ser cancelada se você pedir, se não concluir o curso no prazo máximo, se apresentar documento falso, se cometer infração passível de expulsão, se não efetivar a matrícula no prazo, entre outros casos. Você tem direito de se defender, mas, depois do cancelamento, só volta ao curso por um novo processo seletivo.',
+  'odp-104': 'Para aproveitar uma disciplina que você já cursou, faça um requerimento e entregue à Direção ou Gerência de Ensino do seu campus.',
+  'odp-105': 'Quem analisa seu pedido de aproveitamento é a coordenação do curso ou a coordenação técnico-pedagógica. A resposta pode ser aproveitamento total, aproveitamento parcial (você complementa o que faltar) ou indeferimento.',
+  'odp-106': 'Se houver dúvida de que o que você estudou equivale à disciplina, você pode ter que fazer um exame teórico-prático para mostrar que domina o conteúdo.',
+  'odp-108': 'Certificados obtidos pelo ENEM também podem ser usados para pedir aproveitamento de estudos.',
+  'odp-109': 'Se você foi reprovado, não precisa refazer tudo: as disciplinas em que foi aprovado podem ser aproveitadas.',
+  'odp-89-91': 'Se você foi reprovado e já tentou revisar a nota com o professor, pode abrir um processo de revisão da situação final, com direito a apresentar sua defesa. Se o pedido for aceito, quem corrige é o professor titular ou, se ele estiver impedido, o coordenador do curso.',
+  'odp-52': 'O estágio conta como parte da carga horária do curso, do jeito que o Projeto Pedagógico do Curso (PPC) define. Consulte o PPC do seu curso para saber os detalhes.',
+  'odp-78-9': 'Se você só não consegue ir ao estágio, mas pode frequentar as aulas, não tem direito ao regime de exercícios domiciliares.',
+  'polae-30': 'Pode receber os auxílios do eixo de serviços essenciais quem está matriculado e frequentando o ensino médio (integrado, subsequente, concomitante ou PROEJA) ou o ensino superior e está em situação de vulnerabilidade.',
+  'polae-44': 'Os auxílios essenciais cobrem moradia, alimentação, transporte, material didático, emergências e cuidadores.',
+  'polae-54': 'Para conseguir o auxílio, você se inscreve no edital, entrega os documentos pedidos e passa por uma avaliação socioeconômica com assistente social, que pode incluir entrevista ou visita à sua casa. Também precisa cumprir os critérios do edital.',
+  'polae-59': 'A avaliação da sua situação usa 16 indicadores, entre eles a renda por pessoa da família, quem compõe a família, a condição da moradia, a distância até o campus e os benefícios sociais que vocês recebem.',
+  'polae-61': 'Depois da avaliação, você é classificado em um de três grupos: Grupo 1 (baixa vulnerabilidade), Grupo 2 (média) ou Grupo 3 (alta).',
+  'polae-65': 'O valor depende do seu grupo e é calculado sobre o salário mínimo: o Grupo 3 recebe de 40% a 50%, o Grupo 2 de 30% a 40% e o Grupo 1 de 20% a 30%.',
+  'polae-66': 'Numa emergência, você pode receber até 150% do salário mínimo, no máximo três vezes por ano letivo, com parecer de assistente social.',
+  'polae-47': 'No restaurante, a refeição pode ser subsidiada em até 100% para quem tem renda prioritária e em até 50% para os demais estudantes.',
+  'polae-71': 'Para continuar recebendo o auxílio, você precisa manter pelo menos 75% de frequência no mês e/ou rendimento acadêmico satisfatório.',
+  'polae-73': 'Quem recebe auxílio tem deveres: avisar se sua situação mudar, manter o desempenho mínimo, comunicar transferência ou saída, ir aos atendimentos quando for chamado, devolver por GRU o que receber indevidamente, ter conta bancária no próprio nome e prestar contas.',
+  'polae-74': 'Se sua frequência num mês ficar abaixo de 75%, o auxílio do mês seguinte é suspenso, a não ser que a falta tenha uma justificativa prevista em lei.',
+  'polae-68': 'Para voltar a receber o auxílio, você precisa ter aproveitado pelo menos metade das disciplinas e não pode ter sido reprovado por faltas.',
+  'polae-92-99': 'Se você vai participar de uma atividade fora do campus, pode pedir o Auxílio-Viagem, que faz parte do eixo universal da política.',
+  'polae-26': 'Quem tem renda familiar por pessoa de até um salário mínimo tem prioridade. Atenção: outros trechos da própria política falam em um salário mínimo e meio, então confirme o limite no edital.',
+  'odp1-revogada': 'Este documento é a versão antiga do regulamento e não vale mais. Para qualquer dúvida, use a 2ª edição, que é a vigente.'
+};

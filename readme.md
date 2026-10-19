@@ -23,14 +23,48 @@ Não tem build, servidor nem dependência. Abra o `index.html` no navegador.
 Para recarregar automaticamente a cada edição, use a extensão **Live Server** do
 VS Code e clique em "Go Live".
 
+### Pergunta por voz
+
+A pergunta é feita por voz. O estudante toca no microfone, fala, confere a
+transcrição na tela e só então toca em **Perguntar** (ou grava de novo, ou
+descarta). As sugestões da tela inicial continuam funcionando sem microfone.
+
+- A transcrição usa a Web Speech API do navegador, em pt-BR. Funciona no Chrome,
+  no Edge e no Safari; o Firefox não tem suporte, e a página avisa isso.
+- No Chrome e no Edge a transcrição é feita nos servidores do navegador, então
+  precisa de internet.
+- O navegador só libera o microfone em `https` ou `localhost`. Use o Live Server
+  em vez de abrir o arquivo direto, para não ser perguntado a cada gravação.
+- Permissão negada, microfone ausente, silêncio e falha de rede mostram cada um
+  uma mensagem própria abaixo do campo.
+
+## Como a resposta é montada
+
+Cada resposta segue sempre esta ordem:
+
+1. Nome da normativa e o botão **Abrir PDF**.
+2. O artigo citado e o assunto.
+3. **Texto do artigo**, sem alterações.
+4. **Em linguagem simples**: a explicação gerada por IA a partir desse texto.
+   Ela vem sempre depois do texto e nunca o substitui.
+
+O botão **Baixar normativas**, no topo, lista os PDFs oficiais de todos os
+documentos, e cada cartão tem um link **Baixar PDF** no rodapé.
+
+A explicação vem de `explicar()` em `app.js`. Com `CONFIG_IA.endpoint` vazio,
+usa as explicações pré-geradas em `EXPLICACOES` (`normas.js`). Para gerar em
+tempo real, aponte o endpoint para um serviço que receba
+`POST { pergunta, documento, artigo, texto }` e devolva `{ explicacao }`. Se o
+serviço falhar, o cartão avisa e o texto do artigo continua na tela.
+
 ## Estrutura
 
 | Arquivo | O que faz |
 | --- | --- |
-| `index.html` | Marcação da página: cabeçalho, conversa, campo de pergunta |
+| `index.html` | Marcação da página: cabeçalho, conversa, entrada por voz |
 | `styles.css` | Estilos, com tokens de cor para tema claro e escuro |
-| `app.js` | Motor de busca e lógica do chat |
-| `normas.js` | Base de artigos e metadados dos documentos |
+| `app.js` | Motor de busca, lógica do chat, voz e explicação |
+| `normas.js` | Base de artigos, metadados dos documentos e explicações |
 
 ## Como a busca funciona
 
@@ -92,7 +126,8 @@ Cada entrada de `normas.js` tem esta forma:
 }
 ```
 
-Para usar o texto oficial, basta substituir o campo `texto`. Nada mais muda.
+Para usar o texto oficial, substitua o campo `texto` e gere de novo a explicação
+do mesmo `id` em `EXPLICACOES`, para que ela continue fiel ao texto.
 
 O campo `tags` é o enriquecimento de contexto do trecho: termos e formas de
 perguntar que levam àquele artigo. É o que o braço de significado consulta, e a
@@ -112,8 +147,9 @@ Os índices são reconstruídos sozinhos ao carregar a página.
 Três coisas separam o protótipo do MVP de novembro, e vale dizer isso antes que
 perguntem:
 
-- **Não tem LLM.** A resposta é o próprio texto do artigo recuperado. Na versão
-  final, um modelo reescreve o trecho em linguagem simples, mantendo a citação.
+- **Não tem LLM em tempo real.** As explicações em linguagem simples foram
+  pré-geradas e ficam em `normas.js`. Na versão final, `CONFIG_IA.endpoint`
+  aponta para um modelo que gera a explicação a partir do trecho recuperado.
 - **Não tem embeddings.** O braço de significado usa dicionário e radicalização.
   Na versão final, ele vira busca vetorial com um modelo multilíngue.
 - **Não tem banco de dados.** Os artigos vivem em um arquivo JavaScript. Na versão

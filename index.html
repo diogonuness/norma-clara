@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Normativas do IFTO</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <link rel="stylesheet" href="styles.css">
@@ -6,6 +8,16 @@
   <div class="topo__interno">
     <h1 class="topo__marca">Normativas do <span>IFTO</span></h1>
     <p class="topo__stats"><b id="stat-docs">0</b> documentos vigentes · <b id="stat-artigos">0</b> artigos indexados · busca híbrida + RRF</p>
+    <details class="baixar" id="baixar">
+      <summary class="baixar__botao">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Baixar normativas
+      </summary>
+      <div class="baixar__menu">
+        <p class="baixar__titulo">PDFs oficiais</p>
+        <ul class="baixar__lista" id="baixar-lista"></ul>
+      </div>
+    </details>
   </div>
 </header>
 
@@ -28,11 +40,19 @@
 
 <div class="composer">
   <div class="composer__interno">
-    <form class="composer__campo" id="form-pergunta">
-      <label class="sr-only" for="campo-pergunta" hidden>Sua pergunta</label>
-      <input id="campo-pergunta" type="text" autocomplete="off" placeholder="Escreva sua dúvida sobre as normas…">
-      <button class="composer__enviar" type="submit">Perguntar</button>
-    </form>
+    <div class="composer__campo" id="voz" data-estado="pronto">
+      <button class="composer__gravar" id="btn-gravar" type="button" aria-pressed="false" aria-describedby="transcricao">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="sr-only" id="btn-gravar-rotulo">Gravar pergunta</span>
+      </button>
+      <div class="composer__transcricao" id="transcricao" aria-live="polite">
+        <p class="composer__dica" id="transcricao-dica">Toque no microfone e faça sua pergunta em voz alta.</p>
+        <p class="composer__texto" id="transcricao-texto" hidden></p>
+      </div>
+      <button class="composer__descartar" id="btn-descartar" type="button" hidden>Descartar</button>
+      <button class="composer__enviar" id="btn-enviar" type="button" disabled>Perguntar</button>
+    </div>
+    <p class="composer__erro" id="erro-voz" role="alert" hidden></p>
     <div class="composer__opcoes">
       <label for="incluir-revogadas">
         <input type="checkbox" id="incluir-revogadas">
@@ -44,7 +64,7 @@
 </div>
 
 <footer class="rodape">
-  <p>Protótipo acadêmico do V Ideathon Maker da 17ª JICE. Os textos dos artigos são sínteses escritas para o protótipo — o texto oficial está no PDF de cada documento, linkado em toda resposta. A busca por significado usa um dicionário de termos; na versão final ela é substituída por embeddings.</p>
+  <p>Protótipo acadêmico do V Ideathon Maker da 17ª JICE. Os textos dos artigos são sínteses escritas para o protótipo — o texto oficial está no PDF de cada documento, linkado em toda resposta. A explicação em linguagem simples é gerada por IA a partir do texto do artigo e vem sempre depois dele. A busca por significado usa um dicionário de termos; na versão final ela é substituída por embeddings.</p>
 </footer>
 
 <script src="normas.js"></script>
