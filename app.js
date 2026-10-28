@@ -167,9 +167,12 @@ function buscar(pergunta, incluirRevogadas) {
     const cob = cobertura(IDX_TUDO, expandida);
     const tetoCob = Math.max(...candidatos.map(c => cob[c.i].score)) || 1;
     const tetoRrf = Math.max(...candidatos.map(c => c.rrf)) || 1;
+    // Pesos iguais: acima de 0.5 para a fusão, um trecho que aparece nas duas
+    // listas de busca vence outro que aparece só em uma, mesmo quando essa
+    // única lista o coloca muito à frente.
     candidatos.forEach(c => {
       c.cobertura = cob[c.i].score;
-      c.rerank = 0.65 * (c.rrf / tetoRrf) + 0.35 * (c.cobertura / tetoCob);
+      c.rerank = 0.5 * (c.rrf / tetoRrf) + 0.5 * (c.cobertura / tetoCob);
     });
     candidatos.sort((a, b) => (b.rerank - a.rerank) || (b.desempate - a.desempate));
     resultados = candidatos.concat(resultados.slice(8));
@@ -256,6 +259,9 @@ function cartaoNorma(indice, opcoes = {}) {
 
   const linhaArt = el('p', 'norma__linha-artigo');
   linhaArt.append(el('span', 'norma__artigo', n.artigo), el('span', 'norma__assunto', n.assunto));
+  linhaArt.append(n.tipo === 'literal'
+    ? el('span', 'selo selo--oficial', 'texto oficial')
+    : el('span', 'selo selo--resumo', 'resumo para o protótipo'));
   if (d.situacao === 'revogada') linhaArt.append(el('span', 'selo selo--revogada', 'revogada'));
   cabecalho.append(linhaArt);
   card.append(cabecalho);
@@ -356,9 +362,11 @@ function responder(pergunta) {
     corpo.append(el('p', 'msg__texto',
       'Não encontrei essa informação nas normativas indexadas. Procure a secretaria acadêmica do seu campus ou a coordenação do curso.'));
     const vig = NORMAS.filter(n => DOCUMENTOS[n.doc].situacao === 'vigente').length;
+    const docs = Object.values(DOCUMENTOS).filter(d => d.situacao === 'vigente').length;
     corpo.append(el('p', 'msg__nota',
       'Responder "não sei" em vez de inventar é uma regra do sistema: ' + vig +
-      ' artigos de 2 documentos estão indexados, e nada fora disso é usado como fonte.'));
+      ' artigos de ' + docs + (docs === 1 ? ' documento' : ' documentos') +
+      ' estão indexados, e nada fora disso é usado como fonte.'));
     corpo.append(painelBusca(r));
     mensagem('bot', corpo);
     return;
@@ -407,14 +415,14 @@ const $erroVoz = document.getElementById('erro-voz');
 const DICAS = {
   pronto: 'Toque no microfone e faça sua pergunta em voz alta.',
   gravando: 'Ouvindo… fale sua pergunta e toque de novo para parar.',
-  indisponivel: 'Entrada por voz indisponível. Use as sugestões acima.'
+  indisponivel: 'Entrada por voz indisponível neste navegador.'
 };
 const ERROS_VOZ = {
   'not-allowed': 'O acesso ao microfone foi negado. Libere a permissão no ícone ao lado do endereço da página e tente de novo.',
   'service-not-allowed': 'O navegador bloqueou o reconhecimento de voz nesta página. Abra o sistema por http://localhost (Live Server) ou https e libere o microfone.',
   'audio-capture': 'Nenhum microfone foi encontrado. Verifique se ele está conectado e não está em uso por outro programa.',
   'no-speech': 'Não ouvi nada. Toque no microfone e fale um pouco mais perto dele.',
-  'network': 'A transcrição precisa de internet e a conexão falhou. Verifique a rede e tente de novo.',
+  'network': 'A transcrição precisa de internet e a conexão falhou. Verifique a rede ou digite a pergunta no campo abaixo.',
   'language-not-supported': 'Este navegador não transcreve português. Tente no Chrome ou no Edge.',
   'sem-texto': 'Não consegui entender a pergunta. Tente gravar de novo, falando devagar.'
 };
@@ -480,6 +488,7 @@ function iniciarGravacao() {
     $transcricao.textContent = '';
     definirEstado('pronto');
     if (erroAtual !== 'aborted') mostrarErro(ERROS_VOZ[erroAtual] || ERROS_VOZ['sem-texto']);
+    if (erroAtual === 'network') mostrarCampoTexto(true);
   };
 
   try {
@@ -504,9 +513,36 @@ $enviar.addEventListener('click', () => {
   perguntar(texto);
 });
 
+/* ---------- entrada por texto ----------
+   Alternativa discreta ao microfone: a transcrição depende de internet e não
+   existe no Firefox. Sem suporte a voz, o campo já abre e não pode ser fechado. */
+const $digitar = document.getElementById('digitar');
+const $campoTexto = document.getElementById('campo-texto');
+const $alternarTexto = document.getElementById('btn-digitar');
+
+function mostrarCampoTexto(aberto) {
+  $digitar.hidden = !aberto;
+  $alternarTexto.setAttribute('aria-expanded', String(aberto));
+  $alternarTexto.textContent = aberto ? 'Esconder campo de texto' : 'Prefiro digitar';
+  if (aberto) $campoTexto.focus();
+}
+
+$alternarTexto.addEventListener('click', () => mostrarCampoTexto($digitar.hidden));
+$digitar.addEventListener('submit', e => {
+  e.preventDefault();
+  const texto = $campoTexto.value;
+  $campoTexto.value = '';
+  perguntar(texto);
+});
+$campoTexto.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && Reconhecimento) { mostrarCampoTexto(false); $alternarTexto.focus(); }
+});
+
 if (!Reconhecimento) {
   definirEstado('indisponivel');
-  mostrarErro('Este navegador não transcreve voz. Use o Chrome, o Edge ou o Safari atualizados, ou toque numa das sugestões acima.');
+  mostrarErro('Este navegador não suporta voz. Digite sua pergunta no campo abaixo.');
+  $alternarTexto.hidden = true;
+  $digitar.hidden = false;
 } else {
   definirEstado('pronto');
 }

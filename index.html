@@ -53,7 +53,12 @@
       <button class="composer__enviar" id="btn-enviar" type="button" disabled>Perguntar</button>
     </div>
     <p class="composer__erro" id="erro-voz" role="alert" hidden></p>
+    <form class="composer__digitar" id="digitar" hidden>
+      <label class="sr-only" for="campo-texto">Digite sua pergunta</label>
+      <input class="composer__input" id="campo-texto" type="text" autocomplete="off" enterkeyhint="send" placeholder="Digite sua pergunta e tecle Enter">
+    </form>
     <div class="composer__opcoes">
+      <button class="composer__alternar" id="btn-digitar" type="button" aria-expanded="false" aria-controls="digitar">Prefiro digitar</button>
       <label for="incluir-revogadas">
         <input type="checkbox" id="incluir-revogadas">
         Incluir normas revogadas
@@ -64,7 +69,7 @@
 </div>
 
 <footer class="rodape">
-  <p>Protótipo acadêmico do V Ideathon Maker da 17ª JICE. Os textos dos artigos são sínteses escritas para o protótipo — o texto oficial está no PDF de cada documento, linkado em toda resposta. A explicação em linguagem simples é gerada por IA a partir do texto do artigo e vem sempre depois dele. A busca por significado usa um dicionário de termos; na versão final ela é substituída por embeddings.</p>
+  <p>Protótipo acadêmico do V Ideathon Maker da 17ª JICE. Os artigos marcados como “texto oficial” trazem a redação literal da norma; os marcados como “resumo para o protótipo” são sínteses escritas para esta demonstração. Nos dois casos, o documento completo está no PDF oficial, linkado em toda resposta. A explicação em linguagem simples é gerada por IA a partir do texto do artigo e vem sempre depois dele. A busca reduz as palavras ao radical (“trancar” e “trancamento” caem no mesmo termo) e amplia a pergunta com um dicionário de termos; na versão final, o dicionário é substituído por embeddings.</p>
 </footer>
 
 <script src="normas.js"></script>
