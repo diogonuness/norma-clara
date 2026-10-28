@@ -20,8 +20,11 @@ para recorrer.
 Não tem build, servidor nem dependência. Abra o `index.html` no navegador.
 
 A entrada por voz usa a Web Speech API, que existe no Chrome e no Edge e precisa
-de internet para transcrever. Onde ela não funciona, o campo de texto abre
-sozinho. Para testar a voz localmente, sirva a página por `http://localhost`
+de internet para transcrever. O campo de texto abre sozinho em dois casos: quando
+o navegador não tem a API de voz, e quando a transcrição falha por falta de
+conexão. Nos demais erros — microfone negado, nenhum microfone, nada falado — a
+mensagem explica o que houve e o campo continua a um clique de distância, em
+"Prefiro digitar". Para testar a voz localmente, sirva a página por `http://localhost`
 (extensão Live Server do VS Code) ou por https — o navegador bloqueia o
 microfone em `file://`.
 
@@ -33,6 +36,7 @@ microfone em `file://`.
 | `styles.css` | Estilos, com tokens de cor para tema claro e escuro |
 | `app.js` | Motor de busca, interface do chat, voz e explicação |
 | `normas.js` | Base de artigos, metadados dos documentos e explicações |
+| `testes.js` | Perguntas-gabarito e checagem de integridade, rodadas com Node |
 
 ## Como a busca funciona
 
@@ -132,7 +136,7 @@ um aluno perguntaria, não em como a norma está redigida.
 Um cuidado: o radicalizador junta palavras de mesma raiz, e às vezes junta
 demais. "levei" e "leve" caem no mesmo radical — por isso "infração leve" saiu
 das tags, para não casar com "levei uma advertência". Ao acrescentar tags, rode
-os testes.
+`node testes.js`.
 
 ### Como adicionar um documento
 
@@ -147,8 +151,12 @@ do documento.
 
 ## O que isto ainda não é
 
-Duas coisas separam o protótipo do MVP, e vale dizer isso antes que perguntem:
+Três coisas separam o protótipo do MVP, e vale dizer isso antes que perguntem:
 
+- **Não há LLM em tempo real.** `CONFIG_IA.endpoint` vem como `null`, então as
+  explicações exibidas são as pré-geradas de `EXPLICACOES`. A função `explicar()`
+  já faz a chamada quando há endpoint, mas esse caminho nunca foi exercitado
+  contra um modelo real e não é coberto por `testes.js`, que testa só a busca.
 - **A busca por significado não usa embeddings.** Ela usa dicionário de termos e
   radicalização. Na versão final, vira busca vetorial com um modelo multilíngue.
 - **A base vive em um arquivo JavaScript.** Na versão final, fica em pgvector com
@@ -156,14 +164,31 @@ Duas coisas separam o protótipo do MVP, e vale dizer isso antes que perguntem:
 
 A estrutura do pipeline, porém, é a mesma. Trocar cada peça não muda o desenho.
 
-## Qualidade atual
+## Testes
 
-Testado com 50 perguntas escritas como um aluno ou um professor perguntaria. O
-artigo correto aparece em primeiro lugar nas 50, e as perguntas fora do acervo
-levam à abstenção.
+```
+node testes.js
+```
 
-Ao acrescentar artigos ou editar tags, rode o conjunto de novo: documento novo
-pode roubar o resultado de pergunta que já funcionava.
+O arquivo `testes.js` traz o conjunto de perguntas-gabarito: 50 perguntas
+escritas como um aluno ou um professor perguntaria, cada uma com o id do artigo
+que deve vir em primeiro lugar. Quatro delas são sobre assuntos fora do acervo e
+devem levar à abstenção.
+
+A comparação é pelo id, não pelo número do artigo, porque o número se repete
+entre documentos — "Art. 74" existe na ODP e na POLAE. Comparando por número, o
+teste passaria mesmo trazendo o artigo certo do documento errado.
+
+Hoje o resultado é 50 de 50. Ele também confere a integridade da base: ids
+duplicados, artigo sem explicação, explicação órfã, campo vazio e link que não
+entrega o PDF direto.
+
+Rode antes de cada commit que mexa em `normas.js`. Documento novo pode roubar o
+resultado de pergunta que já funcionava, e tag nova pode colidir com palavra de
+outro artigo — foi o que aconteceu com "levei" e "leve".
+
+Para acrescentar um caso, edite o array `CASOS` em `testes.js`. As perguntas que
+surgirem no teste com usuários reais devem entrar ali.
 
 ## Fontes
 
