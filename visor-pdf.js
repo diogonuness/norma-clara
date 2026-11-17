@@ -1,9 +1,15 @@
 /* Visor de PDF do Norma Clara.
-   Renderiza o PDF oficial com PDF.js (vendor/pdf.min.js), acha a página do
-   trecho por busca normalizada no texto (sem fixar número de página) e
-   destaca os spans do trecho com o azul de seleção do vídeo.
-   Em file:// o navegador bloqueia fetch de arquivo local; nesse caso o PDF
-   vem de normativas/pdf-data.js (base64), carregado sob demanda. */
+   Renderiza o PDF oficial com PDF.js (vendor/pdf.min.js), acha onde está o
+   artigo pela busca no texto (sem fixar número de página) e destaca o trecho
+   com o azul de seleção.
+
+   Texto literal: cada linha do trecho é procurada no documento inteiro, em
+   ordem; se uma linha atravessa uma quebra de página, cai para frase a frase.
+   Resumo (ou literal não encontrado): destaca o parágrafo que começa em "Art. N".
+
+   Em file:// o navegador bloqueia fetch de arquivo local; nesse caso o PDF vem
+   de normativas/pdf-data-<chave>.js (base64), carregado só para o documento
+   aberto. Os arquivos são gerados por gerar-pdf-data.js. */
 (() => {
 'use strict';
 
@@ -17,18 +23,24 @@ const $fechar = document.getElementById('modal-fechar');
 const $oficial = document.getElementById('modal-oficial');
 
 const reduzirMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const OMITIDO = '[…]';
 
 let aberto = false;
 let devolverFoco = null;
-let sessao = 0;            // invalida renderizações de uma abertura anterior
+let sessao = 0;            // invalida trabalho de uma abertura anterior
 let observador = null;
 let docPdf = null;
 
-/* ---------- normalização para a busca do trecho ---------- */
-/* remove acentos, caixa e TODO espaço: aguenta quebras de linha e
-   espaçamentos arbitrários da camada de texto do PDF */
+/* ---------- normalização ----------
+   Sem acentos, sem caixa, sem nada que não seja letra ou dígito (o que some
+   com espaços, quebras e hífen de quebra de linha) e sem as sequências que os
+   PDFs do IFTO costumam perder como ligadura ("ti", "fi", "fl": o PDF.js
+   devolve "estudan\u0000l" para "estudantil"). Aplicada igual aos dois lados. */
 function normalizar(s) {
-  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '');
+  return s.replace(/ﬁ/g, 'fi').replace(/ﬂ/g, 'fl')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .replace(/ti|fi|fl/g, '');
 }
 
 function base64ParaBytes(b64) {
@@ -38,25 +50,25 @@ function base64ParaBytes(b64) {
   return bytes;
 }
 
-let embutidoCarregado = null;
-function carregarEmbutido() {
-  /* injeta normativas/pdf-data.js via <script>, que funciona em file:// */
-  if (embutidoCarregado) return embutidoCarregado;
-  embutidoCarregado = new Promise(resolve => {
-    if (window.PDF_EMBUTIDO) { resolve(window.PDF_EMBUTIDO); return; }
-    const s = document.createElement('script');
-    s.src = 'normativas/pdf-data.js';
-    s.onload = () => resolve(window.PDF_EMBUTIDO || null);
-    s.onerror = () => resolve(null);
-    document.head.append(s);
-  });
-  return embutidoCarregado;
+const embutidos = {};
+function carregarEmbutido(chave) {
+  /* injeta normativas/pdf-data-<chave>.js via <script>, que funciona em file:// */
+  if (!embutidos[chave]) {
+    embutidos[chave] = new Promise(resolve => {
+      if (window.PDF_EMBUTIDO && window.PDF_EMBUTIDO[chave]) { resolve(window.PDF_EMBUTIDO[chave]); return; }
+      const s = document.createElement('script');
+      s.src = 'normativas/pdf-data-' + chave + '.js';
+      s.onload = () => resolve((window.PDF_EMBUTIDO || {})[chave] || null);
+      s.onerror = () => { delete embutidos[chave]; resolve(null); };
+      document.head.append(s);
+    });
+  }
+  return embutidos[chave];
 }
 
 async function obterFonte(opcoes) {
   if (location.protocol === 'file:' && opcoes.chaveEmbutida) {
-    const embutido = await carregarEmbutido();
-    const b64 = embutido && embutido[opcoes.chaveEmbutida];
+    const b64 = await carregarEmbutido(opcoes.chaveEmbutida);
     if (b64) return { data: base64ParaBytes(b64) };
   }
   return { url: encodeURI(opcoes.pdfLocal) };
@@ -104,7 +116,7 @@ $fechar.addEventListener('click', fechar);
 $fundo.addEventListener('click', fechar);
 
 function aoTeclar(e) {
-  if (e.key === 'Escape') { e.preventDefault(); fechar(); return; }
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fechar(); return; }
   if (e.key !== 'Tab') return;
   /* prende o foco dentro do modal */
   const focaveis = [$fechar, $paginas, $oficial].filter(f => !f.hidden);
@@ -131,6 +143,105 @@ function mostrarAviso(texto) {
   $aviso.hidden = false;
 }
 
+/* ---------- busca do trecho ----------
+   indice: todos os itens de texto do documento, em ordem, com a posição de
+   cada um na string normalizada concatenada. marcas: Map(página -> Set(item)). */
+function montarIndice(textos) {
+  const itens = [];
+  let concat = '';
+  textos.forEach((conteudo, p) => {
+    if (!conteudo) return;
+    conteudo.items.forEach((item, i) => {
+      if (typeof item.str !== 'string') return;
+      const n = normalizar(item.str);
+      itens.push({ p, i, ini: concat.length, fim: concat.length + n.length, str: item.str, eol: !!item.hasEOL });
+      concat += n;
+    });
+  });
+  return { itens, concat };
+}
+
+function marcarIntervalo(indice, ini, fim, marcas) {
+  for (const it of indice.itens) {
+    if (it.fim <= ini) continue;
+    if (it.ini >= fim) break;
+    if (it.fim > it.ini) {
+      if (!marcas.has(it.p)) marcas.set(it.p, new Set());
+      marcas.get(it.p).add(it.i);
+    }
+  }
+}
+
+function paginaDe(indice, pos) {
+  const it = indice.itens.find(x => x.fim > pos);
+  return it ? it.p : null;
+}
+
+/* Onde começa o artigo: item que abre com "Art. N" (maiúsculo, para não pegar
+   remissões como "conforme art. 85 da Lei"). */
+function ancoraDoArtigo(indice, artigo) {
+  const m = /Arts?\.?\s*(\d+)/.exec(artigo || '');
+  if (!m) return -1;
+  const inicio = new RegExp('^\\s*Art\\.?\\s*' + m[1] + '\\s*[º°o]?\\s*(\\.|\\s|$)');
+  return indice.itens.findIndex(it => inicio.test(it.str));
+}
+
+function buscarLiteral(indice, trecho, artigo) {
+  const marcas = new Map();
+  const linhas = trecho.split('\n')
+    .flatMap(l => l.split(OMITIDO))
+    .map(l => l.trim())
+    .filter(l => normalizar(l).length >= 8);
+  /* a busca começa no título do artigo, quando ele existe: frases curtas e
+     repetidas ("regime de 40 horas semanais") não casam em artigo vizinho */
+  const k = ancoraDoArtigo(indice, artigo);
+  let cursor = k >= 0 ? indice.itens[k].ini : 0;
+  let primeiraPagina = null;
+  for (const linha of linhas) {
+    const pedacos = [linha];
+    let achou = false;
+    for (let tentativa = 0; tentativa < 2 && !achou; tentativa++) {
+      const lista = tentativa === 0 ? pedacos
+        : linha.split(/(?<=[,;:.])\s+/).filter(f => normalizar(f).length >= 16);
+      for (const pedaco of lista) {
+        const agulha = normalizar(pedaco);
+        const pos = indice.concat.indexOf(agulha, cursor);
+        if (pos < 0) continue;
+        const pag = paginaDe(indice, pos);
+        if (primeiraPagina !== null && pag - primeiraPagina > 3) continue;
+        if (primeiraPagina === null) primeiraPagina = pag;
+        marcarIntervalo(indice, pos, pos + agulha.length, marcas);
+        cursor = pos + agulha.length;
+        achou = true;
+      }
+    }
+  }
+  return marcas;
+}
+
+function buscarPorNumero(indice, artigo) {
+  const marcas = new Map();
+  const k = ancoraDoArtigo(indice, artigo);
+  if (k < 0) return marcas;
+  /* destaca o parágrafo que começa ali: até a linha terminar em . : ou ;
+     (no máximo 8 linhas, para não pintar meia página) */
+  let linhas = 0;
+  let textoLinha = '';
+  for (let j = k; j < indice.itens.length; j++) {
+    const it = indice.itens[j];
+    if (j > k && it.p !== indice.itens[k].p && linhas > 0) break;
+    if (!marcas.has(it.p)) marcas.set(it.p, new Set());
+    marcas.get(it.p).add(it.i);
+    textoLinha += it.str;
+    if (it.eol) {
+      linhas++;
+      if (/[.:;]\s*$/.test(textoLinha) || linhas >= 8) break;
+      textoLinha = '';
+    }
+  }
+  return marcas;
+}
+
 /* ---------- carregamento e renderização ---------- */
 async function carregarDocumento(opcoes) {
   const s = sessao;
@@ -155,39 +266,31 @@ async function carregarDocumento(opcoes) {
   if (s !== sessao) { try { doc.destroy(); } catch {} return; }
   docPdf = doc;
 
-  /* 1) busca a página do trecho pelo texto, sem fixar número no código */
-  let alvo = null; // { pagina, inicio, fim } em índices da string normalizada
+  /* 1) texto de todas as páginas, para achar o artigo sem fixar página */
+  $paginas.innerHTML = '';
+  $paginas.append(criarMensagem('Procurando o artigo no PDF...'));
   const textos = new Array(doc.numPages + 1);
-  if (opcoes.trecho) {
-    const agulha = normalizar(opcoes.trecho);
-    for (let p = 1; p <= doc.numPages && !alvo; p++) {
-      if (s !== sessao) return;
-      const pagina = await doc.getPage(p);
-      const conteudo = await pagina.getTextContent();
-      textos[p] = conteudo;
-      const mapa = [];
-      let concat = '';
-      conteudo.items.forEach((item, i) => {
-        const n = normalizar(item.str || '');
-        mapa.push({ item: i, inicio: concat.length, fim: concat.length + n.length });
-        concat += n;
-      });
-      const pos = concat.indexOf(agulha);
-      if (pos >= 0) alvo = { pagina: p, inicio: pos, fim: pos + agulha.length, mapa };
-    }
+  const paginasPdf = new Array(doc.numPages + 1);
+  for (let p = 1; p <= doc.numPages; p++) {
+    if (s !== sessao) return;
+    paginasPdf[p] = await doc.getPage(p);
+    textos[p] = await paginasPdf[p].getTextContent();
   }
-
   if (s !== sessao) return;
-  if (opcoes.trecho && !alvo) {
+
+  const indice = montarIndice(textos);
+  let marcas = opcoes.trecho ? buscarLiteral(indice, opcoes.trecho, opcoes.artigo) : new Map();
+  if (!marcas.size) marcas = buscarPorNumero(indice, opcoes.artigo);
+  const paginasMarcadas = [...marcas.keys()].sort((a, b) => a - b);
+  const destino = paginasMarcadas.length ? paginasMarcadas[0] : 1;
+  if (!paginasMarcadas.length && (opcoes.trecho || opcoes.artigo)) {
     mostrarAviso('Não conseguimos marcar o trecho. ' + (opcoes.dicaFalha || ''));
   }
 
-  /* 2) monta as cascas das páginas com altura reservada e renderiza sob demanda */
+  /* 2) cascas das páginas com altura reservada; renderização sob demanda */
   $paginas.innerHTML = '';
-  const primeira = await doc.getPage(1);
-  if (s !== sessao) return;
   const larguraDisponivel = Math.max($paginas.clientWidth - 32, 280);
-  const vp1 = primeira.getViewport({ scale: 1 });
+  const vp1 = paginasPdf[1].getViewport({ scale: 1 });
   const escala = Math.min(larguraDisponivel, 576) / vp1.width;
 
   const cascas = [];
@@ -195,72 +298,71 @@ async function carregarDocumento(opcoes) {
     const casca = document.createElement('div');
     casca.className = 'pagina-pdf';
     casca.dataset.pagina = p;
-    casca.style.width = Math.round(vp1.width * escala) + 'px';
-    casca.style.height = Math.round(vp1.height * escala) + 'px';
+    const vp = paginasPdf[p].getViewport({ scale: escala });
+    casca.style.width = Math.round(vp.width) + 'px';
+    casca.style.height = Math.round(vp.height) + 'px';
     casca.setAttribute('aria-label', 'Página ' + p);
     $paginas.append(casca);
     cascas.push(casca);
   }
 
+  let rolou = false;
   const renderizadas = new Set();
   async function renderizarPagina(num) {
     if (renderizadas.has(num) || s !== sessao) return;
     renderizadas.add(num);
     const casca = cascas[num - 1];
-    const pagina = num === 1 ? primeira : await doc.getPage(num);
-    if (s !== sessao) return;
+    const pagina = paginasPdf[num];
     const vp = pagina.getViewport({ scale: escala });
-    casca.style.width = Math.round(vp.width) + 'px';
-    casca.style.height = Math.round(vp.height) + 'px';
 
     const canvas = document.createElement('canvas');
     const proporcao = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.floor(vp.width * proporcao);
     canvas.height = Math.floor(vp.height * proporcao);
     casca.append(canvas);
-    const ctx = canvas.getContext('2d');
     await pagina.render({
-      canvasContext: ctx,
+      canvasContext: canvas.getContext('2d'),
       viewport: vp,
       transform: proporcao !== 1 ? [proporcao, 0, 0, proporcao, 0, 0] : null
     }).promise;
     if (s !== sessao) return;
 
     /* camada de texto, para seleção e destaque */
-    const conteudo = textos[num] || await pagina.getTextContent();
-    if (s !== sessao) return;
     const camada = document.createElement('div');
     camada.className = 'camada-texto';
     camada.style.setProperty('--scale-factor', String(escala));
     casca.append(camada);
     const divs = [];
-    const pdfjs = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
     await pdfjs.renderTextLayer({
-      textContentSource: conteudo,
+      textContentSource: textos[num],
       container: camada,
       viewport: vp,
       textDivs: divs
     }).promise;
     if (s !== sessao) return;
 
-    /* destaque azul do trecho, imitando a seleção do vídeo */
-    if (alvo && alvo.pagina === num) {
-      const marcados = [];
-      alvo.mapa.forEach(m => {
-        if (m.fim > alvo.inicio && m.inicio < alvo.fim && divs[m.item]) {
-          divs[m.item].classList.add('destaque');
-          marcados.push(divs[m.item]);
-        }
+    const alvo = marcas.get(num);
+    if (!alvo) return;
+    /* liga cada item do PDF.js ao span da camada pelo conteúdo, não pela
+       posição: itens vazios podem não ganhar span */
+    const marcados = [];
+    let j = 0;
+    textos[num].items.forEach((item, i) => {
+      if (typeof item.str !== 'string') return;
+      while (j < divs.length && divs[j].textContent !== item.str && item.str !== '') j++;
+      if (item.str === '' || j >= divs.length) return;
+      if (alvo.has(i)) { divs[j].classList.add('destaque'); marcados.push(divs[j]); }
+      j++;
+    });
+    if (num === destino && marcados.length && !rolou) {
+      rolou = true;
+      requestAnimationFrame(() => {
+        if (s !== sessao) return;
+        const alto = Math.min(...marcados.map(d => d.offsetTop));
+        const baixo = Math.max(...marcados.map(d => d.offsetTop + d.offsetHeight));
+        const meio = casca.offsetTop + (alto + Math.min(baixo, alto + $paginas.clientHeight * 0.7)) / 2;
+        $paginas.scrollTop = meio - $paginas.clientHeight / 2;
       });
-      if (marcados.length) {
-        requestAnimationFrame(() => {
-          if (s !== sessao) return;
-          const alto = marcados[0].offsetTop;
-          const baixo = marcados[marcados.length - 1].offsetTop + marcados[marcados.length - 1].offsetHeight;
-          const centro = casca.offsetTop + (alto + baixo) / 2;
-          $paginas.scrollTop = centro - $paginas.clientHeight / 2;
-        });
-      }
     }
   }
 
@@ -272,16 +374,8 @@ async function carregarDocumento(opcoes) {
   cascas.forEach(c => observador.observe(c));
 
   /* 3) vai direto à página do trecho (ou fica na 1) */
-  const destino = alvo ? alvo.pagina : 1;
+  $paginas.scrollTop = cascas[destino - 1].offsetTop - 16;
   await renderizarPagina(destino);
-  if (s !== sessao) return;
-  if (!alvo) $paginas.scrollTop = 0;
-  else if (destino > 1) {
-    /* garante a posição mesmo antes do rAF do destaque */
-    const casca = cascas[destino - 1];
-    if (Math.abs($paginas.scrollTop - casca.offsetTop) > casca.clientHeight) {
-      $paginas.scrollTop = casca.offsetTop - 16;
-    }
-  }
+  for (const p of paginasMarcadas) if (p !== destino) renderizarPagina(p);
 }
 })();

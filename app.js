@@ -217,7 +217,10 @@ const reduzirMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* PDFs disponíveis localmente (pasta normativas/), por documento */
 const PDF_LOCAIS = {
-  disciplinar: 'normativas/01-recorte-do-professor/Regulamento Disciplinar Discente (Res 197-2023).pdf'
+  odp: 'normativas/01-recorte-do-professor/ODP - Organizacao Didatico-Pedagogica dos Cursos Tecnicos Presenciais (Res 38-2013, convalidada pela 23-2015).pdf',
+  disciplinar: 'normativas/01-recorte-do-professor/Regulamento Disciplinar Discente (Res 197-2023).pdf',
+  docente: 'normativas/01-recorte-do-professor/Regimes de Trabalho e Atividades Docentes (Res 58-2019).pdf',
+  polae: 'normativas/02-acrescimos/POLAE - Politica de Assistencia Estudantil.pdf'
 };
 
 /* ---------- elementos ---------- */
@@ -363,6 +366,7 @@ function montarCard(resposta) {
         pdfLocal: resposta.pdfLocal,
         pdfOficial: resposta.pdfOficial,
         trecho: resposta.trechoParaDestacar,
+        artigo: resposta.artigo,
         chaveEmbutida: resposta.chaveEmbutida,
         dicaFalha: resposta.artigo ? "Procure por '" + resposta.artigo + "'." : '',
         devolverFoco: verPdf

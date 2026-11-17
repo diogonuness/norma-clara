@@ -46,16 +46,26 @@ campo continua aceitando texto.
 | `app.js` | Motor de busca (até o comentário `interface`), depois a interface: máquina de estados do composer, voz e digitação da resposta |
 | `visor-pdf.js` | Modal do PDF com PDF.js: acha a página do artigo pela busca no texto e destaca o trecho |
 | `normas.js` | Base de artigos, metadados dos documentos e explicações |
-| `normativas/` | PDFs oficiais (`01-recorte-do-professor/`, `02-acrescimos/`), `indice.csv` e `pdf-data.js`, cópia em base64 usada só quando a página é aberta por `file://` |
+| `normativas/` | Os 4 PDFs oficiais (`01-recorte-do-professor/`, `02-acrescimos/`), `indice.csv` e um `pdf-data-<chave>.js` por documento, cópia em base64 usada só quando a página é aberta por `file://` |
+| `gerar-pdf-data.js` | Gera os `pdf-data-<chave>.js` a partir de `PDF_LOCAIS` (em `app.js`) |
 | `vendor/` | PDF.js 3.11 (build que dispensa módulos ES e roda em `file://`) |
 | `assets/fonts/` | Archivo, Source Serif 4 e JetBrains Mono, self-hosted |
 | `testes.js` | Perguntas-gabarito e checagem de integridade, rodadas com Node |
 
-Ao trocar um PDF de `normativas/`, gere de novo o `pdf-data.js`:
+### PDFs locais
+
+`PDF_LOCAIS`, no topo da interface em `app.js`, liga cada chave de documento
+(`odp`, `disciplinar`, `docente`, `polae`) ao seu PDF em `normativas/`. Ao trocar
+ou acrescentar um PDF, atualize `PDF_LOCAIS` e gere de novo as cópias em base64:
 
 ```
-node -e "const fs=require('fs');const p='normativas/01-recorte-do-professor/Regulamento Disciplinar Discente (Res 197-2023).pdf';fs.writeFileSync('normativas/pdf-data.js','window.PDF_EMBUTIDO = { disciplinar: \"'+fs.readFileSync(p).toString('base64')+'\" };\n')"
+node gerar-pdf-data.js
 ```
+
+O script cria `normativas/pdf-data-<chave>.js` para cada documento. Esses
+arquivos só são lidos quando a página é aberta direto do disco (`file://`), e o
+visor carrega apenas o do documento aberto. Por `http://` ou no GitHub Pages, o
+visor lê o PDF diretamente.
 
 ## Como a busca funciona
 
@@ -100,9 +110,23 @@ texto do artigo continua na tela. As alturas dos dois blocos são reservadas ant
 da digitação começar, então o cartão não pula.
 
 "Ver PDF" abre o PDF oficial num modal, já na página do artigo e com o trecho
-destacado. A página não é fixada no código: o visor procura o texto do artigo no
-PDF. Se não achar, abre na página 1 com um aviso. Documentos sem PDF local abrem
-o link oficial do IFTO em outra aba.
+destacado, nos quatro documentos. A página não é fixada no código: o visor
+procura o texto no PDF.
+
+- **Texto literal:** cada linha do artigo é procurada a partir do título
+  "Art. N", em ordem, e o trecho inteiro fica em azul. Se uma linha atravessa uma
+  quebra de página, a busca cai para frase a frase.
+- **Resumo, ou literal não encontrado:** o visor destaca o parágrafo que começa
+  em "Art. N".
+- **Nada encontrado:** abre na página 1 com o aviso "Não conseguimos marcar o
+  trecho".
+
+Os dois lados são normalizados antes de comparar: sem acentos, sem caixa, sem
+espaços, quebras ou hífens, e sem as sequências "ti", "fi" e "fl". Os PDFs do
+IFTO perdem essas ligaduras na extração ("estudan l" no lugar de "estudantil"),
+e sem isso o destaque falharia na POLAE e no Disciplinar.
+
+Documentos sem PDF local abrem o link oficial do IFTO em outra aba.
 
 O formato que o cartão consome (montado por `respostaDoMotor()` em `app.js`):
 
