@@ -501,7 +501,9 @@ function montarCard(resposta) {
   expandir.addEventListener('click', () => alternarArtigo(blocoOficial, expandir));
   card.append(expandir);
 
-  card.append(el('p', 'card__rotulo', 'Em linguagem simples · IA'));
+  /* sem "· IA": as explicações de EXPLICACOES são escritas antes, não
+     geradas na hora (o rodapé diz "Explicações pré-geradas") */
+  card.append(el('p', 'card__rotulo', 'Em linguagem simples'));
   const simples = criarDigitavel();
   const blocoSimples = el('div', 'card__simples');
   blocoSimples.append(simples.wrap);

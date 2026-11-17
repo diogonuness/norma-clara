@@ -292,7 +292,8 @@ transferência compulsória ou em infrações "graves" e "gravíssimas": a puni�
 mais grave é o **cancelamento de matrícula**. Como os estudantes perguntam
 "posso ser expulso?", a base tem:
 
-- **`disc-cancelamento`** (Art. 8º, § 3º e Art. 11, §§ 10 e 11, texto literal):
+- **`disc-cancelamento`** (etiqueta "Arts. 8º e 11"; o texto literal traz o
+  Art. 8º, § 3º e o Art. 11, §§ 10 e 11):
   como se chega ao cancelamento. Pode ser o terceiro registro de uma infração de
   advertência por escrito, a reincidência em infração de suspensão ou casos
   repetidos, depois de esgotadas as ações educativas. A explicação diz que colar
