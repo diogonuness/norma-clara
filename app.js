@@ -419,7 +419,11 @@ function digitar(digitavel, texto, opcoes) {
         while (n < ultimo && tempos[n] <= decorrido) n++;
         if (n >= ultimo) n = chars.length;
       }
-      if (n !== mostrados) { mostrados = n; alvo.textContent = chars.slice(0, n).join(''); }
+      if (n !== mostrados) {
+        mostrados = n;
+        alvo.textContent = chars.slice(0, n).join('');
+        if (opcoes.aoAvancar && n < chars.length) opcoes.aoAvancar(cursor);
+      }
       if (mostrados >= chars.length) { cursor.remove(); resolve(); return; }
       requestAnimationFrame(quadro);
     };
@@ -772,14 +776,46 @@ async function respostaDoArtigo(n, pergunta) {
   };
 }
 
-const rolar = elemento =>
-  elemento.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'nearest' });
+/* ---------- rolagem ----------
+   --altura-faixa e --altura-topo vêm de ResizeObserver: o CSS usa a primeira
+   em scroll-padding-bottom (nada para atrás do composer) e a segunda em
+   scroll-margin-top (nada para atrás do cabeçalho).
+   - card: o topo do balão da pergunta logo abaixo do cabeçalho (block start),
+     para a leitura seguir pergunta → documento → artigo → explicação;
+   - abstenção e mensagens curtas: block end, acima do composer;
+   - durante a digitação, só acompanha o texto se a pessoa estiver a até 80 px
+     do fim da página (se ela subiu para ler algo, a tela fica onde está). */
+const $faixa = document.getElementById('faixa');
+const $topo = document.querySelector('.topo');
+const medirFaixas = () => {
+  document.documentElement.style.setProperty('--altura-faixa', $faixa.offsetHeight + 'px');
+  document.documentElement.style.setProperty('--altura-topo', $topo.offsetHeight + 'px');
+};
+if (window.ResizeObserver) {
+  const observador = new ResizeObserver(medirFaixas);
+  observador.observe($faixa);
+  observador.observe($topo);
+}
+medirFaixas();
 
+const rolar = (elemento, bloco = 'end') =>
+  elemento.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: bloco });
+
+function acompanharDigitacao(cursor) {
+  const raiz = document.documentElement;
+  if (raiz.scrollHeight - (scrollY + innerHeight) > 80) return;
+  const limite = innerHeight - $faixa.offsetHeight - 16;
+  const fundo = cursor.getBoundingClientRect().bottom;
+  if (fundo > limite) scrollBy({ top: fundo - limite, behavior: 'auto' });
+}
+
+let ultimoBalao = null;
 function acrescentarBalao(pergunta) {
   const balao = el('div', 'balao', pergunta);
   entrar(balao);
   $conversa.append(balao);
-  rolar(balao);
+  ultimoBalao = balao;
+  rolar(balao, 'end');
 }
 
 /* Envia uma pergunta pronta (chips de sugestão) como se a pessoa tivesse digitado */
@@ -935,7 +971,9 @@ async function mostrarResposta(resposta, g, depoisDe) {
   if (g !== geracao) return;
   const limite = avaliarRecolhimento(blocoOficial, expandir);
   const visiveis = limite ? caracteresVisiveis(oficial.fantasma, limite) : null;
-  rolar(card);
+  /* resposta a uma pergunta: o balão dela no topo; card aberto a partir de
+     outro (relacionados, sugestão): o próprio card no topo */
+  rolar(!depoisDe && ultimoBalao && card.previousElementSibling === ultimoBalao ? ultimoBalao : card, 'start');
 
   /* leitor de tela recebe o texto completo uma vez só */
   $anuncio.textContent = resposta.documento + '. ' + resposta.artigo + '. ' +
@@ -953,12 +991,14 @@ async function mostrarResposta(resposta, g, depoisDe) {
   /* ritmo máximo de 18 ms (artigo) e 55 ms (linguagem simples) por caractere.
      Artigo recolhido: digita só o que se vê, em até 1 s; o restante entra
      pronto, escondido, e aparece ao expandir. Tetos de 1,4 s e 3,8 s. */
+  const aoAvancar = acompanharDigitacao;
   await digitar(oficial, resposta.textoOficial,
-    visiveis ? { msPorChar: 18, teto: 1000, ate: visiveis, controle } : { msPorChar: 18, teto: 1400, controle });
+    visiveis ? { msPorChar: 18, teto: 1000, ate: visiveis, controle, aoAvancar }
+      : { msPorChar: 18, teto: 1400, controle, aoAvancar });
   if (g !== geracao) return;
   if (!controle.pular) await esperar(reduzirMovimento ? 0 : 150);
   if (g !== geracao) return;
-  await digitar(simples, textoSimples, { msPorChar: 55, pausaPontuacao: 220, teto: 3800, controle });
+  await digitar(simples, textoSimples, { msPorChar: 55, pausaPontuacao: 220, teto: 3800, controle, aoAvancar });
   if (g !== geracao) return;
   if (semExplicacao) simples.visivel.classList.add('digitavel--erro');
 

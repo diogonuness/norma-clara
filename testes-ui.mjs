@@ -8,7 +8,8 @@
      2. "Perdi a prova, e agora?" traz um card com o Art. 75 da ODP;
      3. clicar no card durante a digitação completa os textos na hora;
      4. "Ver PDF" abre o modal com pelo menos um trecho destacado;
-     5. uma pergunta fora do acervo mostra a abstenção com chips de temas;
+     5. uma pergunta fora do acervo mostra a abstenção com chips de temas, e
+        a rolagem deixa o último chip inteiro acima da faixa do composer;
      6. nenhum erro no console.
    Na primeira vez: npm install && npx playwright install chromium */
 
@@ -98,6 +99,21 @@ async function percorrer(browser, base, nome, opcoes) {
     await abst.waitFor();
     const temas = await abst.locator('.sugestao').allTextContents();
     conferir('pergunta fora do acervo mostra abstenção com temas', temas.length >= 4, temas.join(', '));
+
+    // 5b. a rolagem automática deixa o último chip inteiro acima do composer
+    await page.waitForFunction(() => document.body.dataset.estado === 'done');
+    await page.evaluate(() => new Promise(res => {
+      let y = scrollY, iguais = 0;
+      const v = () => { if (scrollY === y) iguais++; else { iguais = 0; y = scrollY; } iguais >= 6 ? res() : requestAnimationFrame(v); };
+      requestAnimationFrame(v);
+    }));
+    const pos = await abst.evaluate(a => {
+      const chips = a.querySelectorAll('.sugestao');
+      return { chip: Math.round(chips[chips.length - 1].getBoundingClientRect().bottom),
+        faixa: Math.round(document.getElementById('faixa').getBoundingClientRect().top) };
+    });
+    conferir('último chip de tema inteiro acima da faixa do composer', pos.chip <= pos.faixa,
+      `fundo do chip ${pos.chip}px, topo da faixa ${pos.faixa}px`);
 
     // 6. console limpo
     conferir('nenhum erro no console', erros.length === 0, erros.join(' | '));

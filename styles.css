@@ -70,7 +70,18 @@ html {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
+  /* alturas reais do cabeçalho e da faixa do composer, medidas por
+     ResizeObserver em app.js; os valores aqui são só o ponto de partida */
+  --altura-topo: 56px;
+  --altura-faixa: 150px;
+  /* rolagem automática nunca para atrás do composer */
+  scroll-padding-bottom: calc(var(--altura-faixa) + 16px);
 }
+
+/* ...nem atrás do cabeçalho */
+.balao,
+.card,
+.aviso-bot { scroll-margin-top: calc(var(--altura-topo) + 12px); }
 
 body {
   margin: 0;

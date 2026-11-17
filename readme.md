@@ -159,6 +159,19 @@ e sem isso o destaque falharia na POLAE e no Disciplinar.
 
 Documentos sem PDF local abrem o link oficial do IFTO em outra aba.
 
+**Rolagem.** Um `ResizeObserver` mede o cabeçalho e a faixa do composer e guarda
+as alturas em `--altura-topo` e `--altura-faixa`. O `html` usa a segunda em
+`scroll-padding-bottom`, e balões, cards e avisos usam a primeira em
+`scroll-margin-top`, de modo que a rolagem automática nunca para atrás de nenhum
+dos dois. Quando entra um card, a tela rola até o topo do balão da pergunta
+ficar logo abaixo do cabeçalho, e a leitura segue pergunta → documento → artigo
+→ explicação. Abstenção e mensagens curtas rolam até o fim (`block: 'end'`).
+Durante a digitação, a tela só acompanha o texto se a pessoa estiver a até 80 px
+do fim da página; se ela subiu para ler alguma coisa, a tela não é puxada de
+volta. A faixa é `sticky` e fica no fluxo da página, então na rolagem máxima o
+último item nunca fica embaixo dela, e não há `padding-bottom` extra na
+conversa.
+
 Abaixo do rodapé do card, "Outros artigos relacionados (N)" fica recolhido e
 lista até 3 artigos no formato `Art. N · Assunto · Documento`. A regra fica em
 `relacionados()`, na parte do motor de `app.js`:
