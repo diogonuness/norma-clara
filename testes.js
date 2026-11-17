@@ -79,6 +79,11 @@ const CASOS = [
   ['bullying da suspensao?', 'disc-11-iii'],
   ['briga da expulsao?', 'disc-11-iv'],
   ['o uniforme e obrigatorio?', 'disc-5'],
+  // expulsão: o regulamento fala em "cancelamento de matrícula"; colar é
+  // advertência por escrito e só chega ao cancelamento por reincidência
+  ['posso ser expulso por colar na prova?', 'disc-cancelamento'],
+  ['o que pode dar expulsão no IF?', 'disc-11-iv'],
+  ['colar na prova dá advertência?', 'disc-11-ii'],
 
   // --- Trabalho docente ---
   ['quantas aulas por semana o professor tem que dar', 'doc-27'],

@@ -87,6 +87,10 @@ O pipeline reproduz, em JavaScript puro, a arquitetura proposta para o MVP final
    distintos da pergunta o trecho cobre, pesados por idf. Fusão e cobertura pesam
    igual — acima disso, um trecho que aparece nas duas listas vence outro que
    aparece só numa, mesmo quando essa única lista o coloca muito à frente.
+   Na cobertura, os termos que vieram só da expansão por significado valem
+   metade (`PESO_EXPANSAO`). Eles são palpites do dicionário, não palavras que a
+   pessoa escreveu. Sem isso, em "posso ser expulso por colar na prova?", os
+   sinônimos de "prova" (verificação, aprendizagem) pesavam mais que "expulso".
 8. **Filtro de vigência.** Artigos de normas revogadas são descartados
    (`buscar(pergunta, false)`).
 9. **Abstenção.** Se o melhor trecho não cobrir termos temáticos suficientes da
@@ -215,7 +219,7 @@ esperando `{ explicacao }`. Nenhuma chave de API vive no front-end.
 
 ## A base de normas
 
-Quatro documentos vigentes, 66 artigos indexados:
+Quatro documentos vigentes, 67 artigos indexados:
 
 | Documento | Norma |
 | --- | --- |
@@ -236,7 +240,7 @@ Cada artigo mostra na interface de onde vem o seu texto:
 
 - **texto oficial** — a redação da norma, transcrita do PDF palavra por palavra.
   Aparece em serifa, com barra de citação e o selo "Texto oficial". No código,
-  esses trazem `tipo:'literal'`. **Hoje são os 66 artigos vigentes.**
+  esses trazem `tipo:'literal'`. **Hoje são os 67 artigos vigentes.**
 - **resumo** — síntese escrita para o protótipo. Aparece em sans, sem barra, sob
   "Resumo do artigo" e com o selo âmbar "Resumo · confira no PDF". No código,
   ficam sem o campo `tipo`. Hoje só o registro da 1ª edição da ODP (revogada,
@@ -277,6 +281,29 @@ Um cuidado: o radicalizador junta palavras de mesma raiz, e às vezes junta
 demais. "levei" e "leve" caem no mesmo radical — por isso "infração leve" saiu
 das tags, para não casar com "levei uma advertência". Ao acrescentar tags, rode
 `node testes.js`.
+
+### Expulsão no Regulamento Disciplinar
+
+O Regulamento Disciplinar Discente não usa a palavra "expulsão" nem fala em
+transferência compulsória ou em infrações "graves" e "gravíssimas": a punição
+mais grave é o **cancelamento de matrícula**. Como os estudantes perguntam
+"posso ser expulso?", a base tem:
+
+- **`disc-cancelamento`** (Art. 8º, § 3º e Art. 11, §§ 10 e 11, texto literal):
+  como se chega ao cancelamento. Pode ser o terceiro registro de uma infração de
+  advertência por escrito, a reincidência em infração de suspensão ou casos
+  repetidos, depois de esgotadas as ações educativas. A explicação diz que colar
+  (Art. 11, II, i) é advertência por escrito e, sozinho, não cancela a matrícula.
+  Assunto: "Expulsão: quando a punição chega ao cancelamento da matrícula".
+- **`disc-11-iv`** (Art. 11, IV), a lista de infrações que podem levar ao
+  cancelamento, agora com o assunto "O que dá cancelamento de matrícula
+  (expulsão)".
+
+A palavra "expulsão" entrou só nos assuntos e nas tags, nunca no texto literal.
+O radical de "expulso" (`expuls`) não casa com nenhuma outra palavra da base.
+"Transferência" ficou de fora das tags de propósito: como o regulamento não tem
+transferência compulsória, a tag puxaria para o disciplinar perguntas como "como
+pedir transferência de campus".
 
 ### Como adicionar um documento
 

@@ -95,16 +95,22 @@ const IDX_TUDO  = construirIndice(n => n.assunto + ' ' + n.texto + ' ' + n.tags)
 
 /* Reranking: o BM25 satura na repetição de um termo, então um trecho curto que
    repete uma palavra comum sobe demais. O reranker troca o critério — conta
-   quantos termos DISTINTOS da pergunta o trecho cobre, pesados por idf. */
-function cobertura(indice, termos) {
-  const presentes = new Set(indice.docs[0] ? [] : []);
+   quantos termos DISTINTOS da pergunta o trecho cobre, pesados por idf.
+   Termos que vieram só da expansão por significado valem metade: são palpites
+   do dicionário, não palavras que a pessoa escreveu. Sem isso, em "posso ser
+   expulso por colar na prova?", os sinônimos de "prova" (verificação,
+   aprendizagem) pesavam mais do que "expulso". */
+const PESO_EXPANSAO = 0.5;
+function cobertura(indice, termos, originais) {
+  const daPergunta = new Set(originais || termos);
   return indice.docs.map((doc, i) => {
     const conjunto = new Set(doc);
     let score = 0;
     new Set(termos).forEach(t => {
       if (!conjunto.has(t)) return;
       const n = indice.df.get(t) || 0;
-      score += Math.log(1 + (indice.N - n + 0.5) / (n + 0.5));
+      const idf = Math.log(1 + (indice.N - n + 0.5) / (n + 0.5));
+      score += daPergunta.has(t) ? idf : PESO_EXPANSAO * idf;
     });
     return { i, score };
   });
@@ -164,7 +170,7 @@ function buscar(pergunta, incluirRevogadas) {
   // reranking dos 8 melhores candidatos da fusão
   const candidatos = resultados.slice(0, 8);
   if (candidatos.length > 1 && listaRef.length === 0) {
-    const cob = cobertura(IDX_TUDO, expandida);
+    const cob = cobertura(IDX_TUDO, expandida, base);
     const tetoCob = Math.max(...candidatos.map(c => cob[c.i].score)) || 1;
     const tetoRrf = Math.max(...candidatos.map(c => c.rrf)) || 1;
     // Pesos iguais: acima de 0.5 para a fusão, um trecho que aparece nas duas

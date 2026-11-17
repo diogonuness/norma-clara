@@ -188,16 +188,30 @@ function ancoraDoArtigo(indice, artigo) {
 
 function buscarLiteral(indice, trecho, artigo) {
   const marcas = new Map();
-  const linhas = trecho.split('\n')
-    .flatMap(l => l.split(OMITIDO))
-    .map(l => l.trim())
-    .filter(l => normalizar(l).length >= 8);
   /* a busca começa no título do artigo, quando ele existe: frases curtas e
      repetidas ("regime de 40 horas semanais") não casam em artigo vizinho */
   const k = ancoraDoArtigo(indice, artigo);
   let cursor = k >= 0 ? indice.itens[k].ini : 0;
   let primeiraPagina = null;
+  /* uma linha "Art. N." no meio do trecho (literais que juntam dois artigos)
+     leva a busca ao título desse artigo e reinicia a janela de páginas */
+  const linhas = [];
+  for (const bruta of trecho.split('\n')) {
+    if (/^\s*Arts?\.?\s*\d+/.test(bruta)) linhas.push({ ancora: bruta });
+    for (const pedaco of bruta.split(OMITIDO)) {
+      const l = pedaco.trim();
+      if (normalizar(l).length >= 8) linhas.push(l);
+    }
+  }
   for (const linha of linhas) {
+    if (linha.ancora) {
+      const outro = ancoraDoArtigo(indice, linha.ancora);
+      if (outro >= 0 && indice.itens[outro].ini >= cursor) {
+        cursor = indice.itens[outro].ini;
+        primeiraPagina = indice.itens[outro].p;
+      }
+      continue;
+    }
     const pedacos = [linha];
     let achou = false;
     for (let tentativa = 0; tentativa < 2 && !achou; tentativa++) {
