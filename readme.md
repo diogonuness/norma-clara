@@ -147,15 +147,25 @@ acrescentados por responderem dúvida frequente de estudante.
 
 Cada artigo mostra na interface de onde vem o seu texto:
 
-- **texto oficial** — a redação da norma, transcrita do PDF. São 30 artigos, os
-  do Disciplinar Discente e os dos Regimes de Trabalho Docente. No código, esses
-  trazem `tipo:'literal'`.
-- **resumo para o protótipo** — síntese fiel escrita para o protótipo. São os
-  demais, sem o campo `tipo`.
+- **texto oficial** — a redação da norma, transcrita do PDF palavra por palavra.
+  Aparece em serifa, com barra de citação e o selo "Texto oficial". No código,
+  esses trazem `tipo:'literal'`. **Hoje são os 66 artigos vigentes.**
+- **resumo** — síntese escrita para o protótipo. Aparece em sans, sem barra, sob
+  "Resumo do artigo" e com o selo âmbar "Resumo · confira no PDF". No código,
+  ficam sem o campo `tipo`. Hoje só o registro da 1ª edição da ODP (revogada,
+  "Documento inteiro") continua assim.
+
+Nos literais, a transcrição corrige só artefatos da extração do PDF: quebras de
+linha, hifenização, ligaduras perdidas ("estudan l" → "estudantil"), cabeçalhos,
+rodapés do SEI e chamadas de nota de rodapé. Erros da própria norma ficam como
+estão (dois "Parágrafo único" no Art. 75 da ODP, "Art 99." sem ponto na POLAE).
+Cada dispositivo fica numa linha. Quando o rótulo cita só um inciso ou
+parágrafo, o caput entra junto e o trecho pulado vira uma linha `[…]`.
 
 Para converter uma síntese em texto oficial, substitua o campo `texto` pela
-redação do PDF, acrescente `tipo:'literal'` e gere de novo a explicação
-correspondente em `EXPLICACOES`.
+redação do PDF, acrescente `tipo:'literal'`, confira a explicação
+correspondente em `EXPLICACOES` e rode `node testes.js`: o texto literal muda o
+índice da busca, e às vezes é preciso acertar as `tags`.
 
 ### Como adicionar um artigo
 

@@ -377,12 +377,17 @@ function montarCard(resposta) {
   const chips = el('div', 'card__chips');
   chips.append(el('span', 'chip-artigo', resposta.artigo));
   if (resposta.tema) chips.append(el('span', 'chip-tema', resposta.tema));
-  if (resposta.oficial !== false) chips.append(el('span', 'chip-oficial', 'Texto oficial'));
+  /* serifa + barra de citação significam "a norma, palavra por palavra";
+     o que é síntese aparece em sans, sem barra, com rótulo e selo próprios */
+  const literal = resposta.oficial !== false;
+  chips.append(literal
+    ? el('span', 'chip-oficial', 'Texto oficial')
+    : el('span', 'chip-resumo', 'Resumo · confira no PDF'));
   card.append(chips);
 
-  card.append(el('p', 'card__rotulo', 'O que diz o artigo'));
+  card.append(el('p', 'card__rotulo', literal ? 'O que diz o artigo' : 'Resumo do artigo'));
   const oficial = criarDigitavel();
-  const blocoOficial = el('div', 'card__oficial');
+  const blocoOficial = el('div', literal ? 'card__oficial' : 'card__oficial card__oficial--resumo');
   blocoOficial.append(oficial.wrap);
   card.append(blocoOficial);
 

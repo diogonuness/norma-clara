@@ -31,6 +31,8 @@
   --surface:       #FAFAF1;
   --plain-bg:      #E0E8D7;
   --badge-bg:      #D9E3D3;
+  --resumo-bg:     #F1E6C8;  /* selo "Resumo · confira no PDF" */
+  --resumo-ink:    #6B5418;
   --dim-overlay:   rgba(60, 64, 50, 0.10);
 
   /* verdes */
@@ -372,6 +374,28 @@ body[data-estado="listening"] .veu {
   font-size: 16px;
   line-height: 1.45;
   color: var(--ink);
+}
+
+.chip-resumo {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  background: var(--resumo-bg);
+  color: var(--resumo-ink);
+  border-radius: 4px;
+  padding: 3px 7px;
+}
+.card__oficial--resumo {
+  border-left: 0;
+  padding-left: 0;
+}
+.card__oficial--resumo .digitavel__fantasma,
+.card__oficial--resumo .digitavel__visivel {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .card__simples {
