@@ -268,6 +268,35 @@ Três coisas separam o protótipo do MVP, e vale dizer isso antes que perguntem:
 
 A estrutura do pipeline, porém, é a mesma. Trocar cada peça não muda o desenho.
 
+## Copiar e avaliar
+
+No rodapé de cada card, ao lado de "Baixar PDF":
+
+- **Copiar** põe na área de transferência um texto pronto para o WhatsApp:
+  pergunta, resposta em linguagem simples, documento, artigo, referência, link
+  oficial do PDF e "(via Norma Clara)". Por `file://`, onde a API de área de
+  transferência pode faltar, a cópia usa `document.execCommand('copy')`.
+- **"Isso respondeu?" 👍 / 👎** grava `{ pergunta, artigoId, util, data }` em
+  `localStorage`, na chave `normaClara.feedback`. Fica só no navegador de quem
+  respondeu; se o `localStorage` estiver bloqueado, o "Obrigado!" aparece mesmo
+  assim e nada quebra.
+
+No desktop as ações têm rótulo; no celular, só ícone, com o rótulo no
+`aria-label`.
+
+### Transformar 👎 em casos de teste
+
+Abra a página com `?admin=1` (por exemplo `index.html?admin=1`). Aparece
+"Exportar perguntas" no rodapé, que baixa um `.json` com as respostas marcadas
+com 👎. Para cada uma:
+
+1. Descubra qual artigo deveria ter vindo (ou se o certo era a abstenção).
+2. Acrescente `['a pergunta', 'id-esperado']` ao array `CASOS` de `testes.js`.
+3. Ajuste as `tags` ou os sinônimos até `node testes.js` passar de novo.
+
+É assim que as perguntas reais de estudantes viram regressão: uma pergunta que
+falhou uma vez não volta a falhar sem alguém perceber.
+
 ## Testes
 
 ```

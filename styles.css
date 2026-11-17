@@ -497,9 +497,61 @@ body[data-estado="listening"] .veu {
 }
 .card__rodape {
   display: flex;
-  align-items: baseline;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px 16px;
+}
+.card__acoes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.card__acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: none;
+  padding: 4px 2px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  transition: color 150ms var(--ease), transform 150ms var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card__acao:hover { color: var(--green-900); }
+}
+.card__acao:active { transform: scale(.94); }
+.card__acao-icone { line-height: 0; }
+.card__acao--feito { color: var(--green-900); }
+.card__avaliacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 24px;
+}
+.card__avaliacao-pergunta {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-right: 4px;
+}
+.card__voto { padding: 4px; }
+.card__avaliacao-obrigado {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green-900);
+}
+.faixa__admin {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .card__referencia {
   margin: 0;
@@ -925,6 +977,11 @@ body[data-estado="listening"] .composer__mic::after {
   .faixa__ajuda { font-size: 12px; }
   .faixa__rodape { font-size: 11px; }
   .card { box-shadow: none; padding: 16px; }
+  /* ações do card: só ícone (o rótulo fica no aria-label), menos "Copiado ✓" */
+  .card__acao-rotulo { display: none; }
+  .card__acao--feito .card__acao-rotulo { display: inline; }
+  .card__acao { padding: 6px; }
+  .card__acoes { gap: 4px 10px; }
   .balao { max-width: 90%; }
   .modal__janela {
     width: 100vw;

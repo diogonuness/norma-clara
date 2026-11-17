@@ -448,11 +448,13 @@ function montarCard(resposta) {
   card.append(el('hr', 'card__divisor'));
   const rodape = el('div', 'card__rodape');
   rodape.append(el('p', 'card__referencia', resposta.referencia || ''));
+  const acoes = el('div', 'card__acoes');
   const baixar = el('a', 'card__baixar', 'Baixar PDF');
   baixar.href = encodeURI(resposta.pdfLocal || resposta.pdfOficial);
   baixar.setAttribute('download', '');
   if (!resposta.pdfLocal) { baixar.target = '_blank'; baixar.rel = 'noopener'; }
-  rodape.append(baixar);
+  acoes.append(baixar, montarCopiar(resposta), montarAvaliacao(resposta));
+  rodape.append(acoes);
   card.append(rodape);
 
   card.dataset.cartao = String(++contadorCartoes);
@@ -464,6 +466,120 @@ function montarCard(resposta) {
 }
 
 let contadorCartoes = 0;
+
+/* ---------- ações do card: copiar e avaliar ---------- */
+const ICONES = {
+  copiar: '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
+  ok: '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  sim: '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>',
+  nao: '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>'
+};
+
+function textoParaCompartilhar(resposta) {
+  const linhas = [];
+  if (resposta.pergunta) linhas.push('Pergunta: ' + resposta.pergunta);
+  linhas.push('Resposta: ' + (resposta.linguagemSimples || resposta.textoOficial));
+  linhas.push('Fonte: ' + resposta.documento + ', ' + resposta.artigo + ' — ' + resposta.referencia);
+  linhas.push(resposta.pdfOficial);
+  linhas.push('(via Norma Clara)');
+  return linhas.join('\n');
+}
+
+async function copiarTexto(texto) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(texto);
+      return true;
+    }
+  } catch {}
+  /* reserva para file:// e navegadores sem a API: textarea temporário */
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.append(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+function montarCopiar(resposta) {
+  const b = el('button', 'card__acao card__copiar');
+  b.type = 'button';
+  b.setAttribute('aria-label', 'Copiar resposta com a fonte');
+  const icone = el('span', 'card__acao-icone');
+  icone.innerHTML = ICONES.copiar;
+  const rotulo = el('span', 'card__acao-rotulo', 'Copiar');
+  b.append(icone, rotulo);
+  let timer = null;
+  b.addEventListener('click', async e => {
+    e.stopPropagation();
+    const ok = await copiarTexto(textoParaCompartilhar(resposta));
+    icone.innerHTML = ok ? ICONES.ok : ICONES.copiar;
+    rotulo.textContent = ok ? 'Copiado ✓' : 'Não deu para copiar';
+    b.classList.add('card__acao--feito');
+    $anuncio.textContent = ok ? 'Resposta copiada.' : 'Não deu para copiar.';
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      icone.innerHTML = ICONES.copiar;
+      rotulo.textContent = 'Copiar';
+      b.classList.remove('card__acao--feito');
+    }, 1500);
+  });
+  return b;
+}
+
+/* Feedback fica só neste navegador (localStorage); ?admin=1 exporta os 👎 */
+const CHAVE_FEEDBACK = 'normaClara.feedback';
+function lerFeedback() {
+  try { return JSON.parse(localStorage.getItem(CHAVE_FEEDBACK)) || []; } catch { return []; }
+}
+function salvarFeedback(registro) {
+  try {
+    const lista = lerFeedback();
+    lista.push(registro);
+    localStorage.setItem(CHAVE_FEEDBACK, JSON.stringify(lista));
+  } catch {}
+}
+
+function montarAvaliacao(resposta) {
+  const grupo = el('div', 'card__avaliacao');
+  grupo.setAttribute('role', 'group');
+  grupo.setAttribute('aria-label', 'Isso respondeu?');
+  grupo.append(el('span', 'card__acao-rotulo card__avaliacao-pergunta', 'Isso respondeu?'));
+  const votar = util => e => {
+    e.stopPropagation();
+    salvarFeedback({ pergunta: resposta.pergunta || null, artigoId: resposta.id, util, data: new Date().toISOString() });
+    grupo.replaceChildren(el('span', 'card__avaliacao-obrigado', 'Obrigado!'));
+    $anuncio.textContent = 'Obrigado pela avaliação.';
+  };
+  for (const [util, rotulo, icone] of [[true, 'Sim, respondeu', ICONES.sim], [false, 'Não respondeu', ICONES.nao]]) {
+    const b = el('button', 'card__acao card__voto');
+    b.type = 'button';
+    b.setAttribute('aria-label', rotulo);
+    b.innerHTML = icone;
+    b.addEventListener('click', votar(util));
+    grupo.append(b);
+  }
+  return grupo;
+}
+
+function exportarNegativos() {
+  const negativos = lerFeedback().filter(r => r.util === false);
+  const blob = new Blob([JSON.stringify(negativos, null, 2)], { type: 'application/json' });
+  const a = el('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'norma-clara-perguntas-sem-resposta.json';
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
 
 /* "Outros artigos relacionados": recolhido; cada linha abre o card do artigo */
 function montarRelacionados(resposta, card) {
@@ -898,6 +1014,12 @@ $seloDemo.hidden = !MODO_DEMO;
 $rodape.textContent = MODO_DEMO
   ? 'Protótipo acadêmico · Explicações pré-geradas para demonstração · Fonte oficial disponível em cada resposta.'
   : 'Protótipo acadêmico · Fonte oficial disponível em cada resposta.';
+if (PARAMS.get('admin') === '1') {
+  const exportar = el('button', 'faixa__admin', 'Exportar perguntas');
+  exportar.type = 'button';
+  exportar.addEventListener('click', exportarNegativos);
+  $rodape.append(' · ', exportar);
+}
 if (micIndisponivel) {
   $mic.title = 'Seu navegador não suporta voz. Digite sua pergunta.';
   $mic.setAttribute('aria-label', 'Falar pergunta (indisponível neste navegador)');
