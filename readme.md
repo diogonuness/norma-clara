@@ -326,8 +326,21 @@ falhou uma vez não volta a falhar sem alguém perceber.
 ## Testes
 
 ```
-node testes.js
+npm install                       # só na primeira vez (Playwright, só para testes)
+npx playwright install chromium   # idem
+npm test                          # node testes.js && node testes-ui.mjs
 ```
+
+O site continua sem build: o `package.json` existe só para os testes. Há dois
+conjuntos:
+
+- **`node testes.js`**: perguntas-gabarito e integridade da base. Roda sem
+  instalar nada, e é o que o GitHub Pages executa antes de publicar.
+- **`node testes-ui.mjs`**: abre o site num Chromium real, servido por um
+  servidor estático mínimo em Node, em 1280×720 e em 390×844. Confere os chips
+  do estado inicial, o card do Art. 75 da ODP para "Perdi a prova, e agora?", o
+  clique que completa a digitação, o destaque no visor de PDF, a abstenção com
+  chips de temas e o console sem erros.
 
 O arquivo `testes.js` traz o conjunto de perguntas-gabarito: 54 perguntas
 escritas como um aluno ou um professor perguntaria, cada uma com o id do artigo
