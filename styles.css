@@ -713,6 +713,7 @@ body[data-estado="listening"] .composer__mic::after {
   font-weight: 600;
   transition: background 150ms var(--ease), transform 150ms var(--ease);
 }
+.composer__enviar-icone { display: none; }
 .composer__enviar--ativo { background: var(--green-900); }
 @media (hover: hover) and (pointer: fine) {
   .composer__enviar--ativo:hover { background: #1A432F; }
@@ -903,7 +904,26 @@ body[data-estado="listening"] .composer__mic::after {
   .faixa__interno { padding-left: 16px; padding-right: 16px; }
   .palco, .topo { padding-left: 16px; padding-right: 16px; }
   .faixa__ajuda { margin-left: 0; }
-  .composer__enviar { padding: 0 16px; }
+  /* "Perguntar" vira um quadrado 48×48 com seta; o rótulo fica no aria-label */
+  .composer__enviar {
+    width: 48px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+  }
+  .composer__enviar-texto { display: none; }
+  .composer__enviar-icone { display: block; }
+  /* ajuda e rodapé: 12 px e 11 px, no máximo 2 linhas */
+  .faixa__ajuda,
+  .faixa__rodape {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+  .faixa__ajuda { font-size: 12px; }
+  .faixa__rodape { font-size: 11px; }
   .card { box-shadow: none; padding: 16px; }
   .balao { max-width: 90%; }
   .modal__janela {

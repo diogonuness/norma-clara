@@ -237,13 +237,23 @@ const $seloDemo = document.getElementById('selo-demo');
 const $reiniciar = document.getElementById('btn-reiniciar');
 const $anuncio = document.getElementById('anuncio');
 
-const PLACEHOLDERS = {
+const PLACEHOLDERS_LONGOS = {
   idle: 'Clique no microfone para fazer sua pergunta.',
   listening: 'Pode falar...',
   review: '',
   answering: 'Sua resposta está chegando...',
   done: 'Faça outra pergunta...'
 };
+/* no celular o campo tem ~210 px: cada placeholder cabe numa linha */
+const PLACEHOLDERS_CURTOS = {
+  idle: 'Digite ou fale sua pergunta',
+  listening: 'Pode falar...',
+  review: '',
+  answering: 'Resposta chegando...',
+  done: 'Faça outra pergunta...'
+};
+const telaEstreita = matchMedia('(max-width: 640px)');
+let PLACEHOLDERS = telaEstreita.matches ? PLACEHOLDERS_CURTOS : PLACEHOLDERS_LONGOS;
 const AJUDA_PADRAO = 'Pergunte com suas palavras. A resposta vem com a fonte.';
 const AJUDAS = {
   idle: AJUDA_PADRAO,
@@ -261,7 +271,11 @@ function definirEstado(novo, ajuda) {
   estado = novo;
   document.body.dataset.estado = novo;
   if (novo !== 'review') $campo.placeholder = PLACEHOLDERS[novo] || '';
-  $ajuda.textContent = ajuda != null ? ajuda : (AJUDAS[novo] || AJUDA_PADRAO);
+  /* no celular o botão é só uma seta: a ajuda não pode falar em "Perguntar" */
+  const ajudaPadrao = novo === 'review' && telaEstreita.matches
+    ? 'Tudo certo? Toque na seta para enviar.'
+    : (AJUDAS[novo] || AJUDA_PADRAO);
+  $ajuda.textContent = ajuda != null ? ajuda : ajudaPadrao;
 
   const podeEnviar = novo === 'review';
   $enviar.disabled = !podeEnviar;
@@ -889,6 +903,11 @@ if (micIndisponivel) {
   $mic.setAttribute('aria-label', 'Falar pergunta (indisponível neste navegador)');
 }
 definirEstado('idle');
+telaEstreita.addEventListener('change', () => {
+  PLACEHOLDERS = telaEstreita.matches ? PLACEHOLDERS_CURTOS : PLACEHOLDERS_LONGOS;
+  if (estado !== 'review') $campo.placeholder = PLACEHOLDERS[estado] || '';
+  autoCrescer();
+});
 addEventListener('resize', autoCrescer);
 if (document.fonts) document.fonts.ready.then(autoCrescer);
 })();
