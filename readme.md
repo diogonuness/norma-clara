@@ -268,6 +268,32 @@ Três coisas separam o protótipo do MVP, e vale dizer isso antes que perguntem:
 
 A estrutura do pipeline, porém, é a mesma. Trocar cada peça não muda o desenho.
 
+## Publicar
+
+O site é estático e todos os caminhos são relativos, então funciona servido de
+uma subpasta como `https://<usuario>.github.io/norma-clara/`. No GitHub Pages o
+microfone funciona: o site é servido por HTTPS, que é o que o navegador exige
+para liberar a voz (em `file://` ele bloqueia).
+
+O workflow `.github/workflows/pages.yml` publica a raiz do repositório a cada
+push na `main`. Antes, roda `node testes.js`; se alguma pergunta-gabarito ou
+checagem de integridade falhar, nada é publicado.
+
+Para publicar pela primeira vez (troque `<usuario>` pelo seu usuário do GitHub):
+
+```
+gh repo create norma-clara --public --source . --remote origin
+git push -u origin main
+gh api -X POST repos/<usuario>/norma-clara/pages -f build_type=workflow
+```
+
+Sem o `gh`, crie o repositório vazio `norma-clara` em github.com e rode
+`git remote add origin https://github.com/<usuario>/norma-clara.git` e
+`git push -u origin main`. Depois, em Settings › Pages › Build and deployment,
+escolha **GitHub Actions** como fonte. A primeira publicação começa sozinha
+(ou em Actions › "Publicar no GitHub Pages" › Run workflow) e o endereço aparece
+no resumo da execução.
+
 ## Copiar e avaliar
 
 No rodapé de cada card, ao lado de "Baixar PDF":
