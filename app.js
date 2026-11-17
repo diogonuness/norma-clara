@@ -533,13 +533,16 @@ let contadorCartoes = 0;
    Seis linhas visíveis, com degradê na base; "Ler artigo completo" expande.
    Decide pela altura real do texto (depois das fontes), não pelo número de
    caracteres: 300 caracteres cabem em 6 linhas no desktop e não no celular. */
-const LINHAS_RECOLHIDAS = 6;
+/* 6 linhas; em tela pequena (320 px de largura ou até 700 px de altura), 4:
+   com 6, no iPhone SE (375×667) a explicação começava atrás do composer */
+const telaPequena = matchMedia('(max-width: 374px), (max-height: 700px)');
+const linhasRecolhidas = () => (telaPequena.matches ? 4 : 6);
 
 function avaliarRecolhimento(bloco, expandir) {
   const fantasma = bloco.querySelector('.digitavel__fantasma');
   const corpo = bloco.querySelector('.card__oficial-corpo');
   const linha = parseFloat(getComputedStyle(fantasma).lineHeight);
-  const limite = Math.round(linha * LINHAS_RECOLHIDAS);
+  const limite = Math.round(linha * linhasRecolhidas());
   const precisa = fantasma.offsetHeight > limite + 2;
   corpo.style.setProperty('--altura-recolhida', limite + 'px');
   bloco.classList.toggle('card__oficial--recolhivel', precisa);
@@ -732,6 +735,7 @@ function montarRelacionados(resposta, card) {
 function esconderHero() {
   if (temConversa) return Promise.resolve();
   temConversa = true;
+  document.body.classList.add('em-conversa');
   return new Promise(resolve => {
     $conversa.hidden = false;
     if (reduzirMovimento) { $hero.hidden = true; resolve(); return; }
@@ -1151,6 +1155,7 @@ $reiniciar.addEventListener('click', () => {
   $conversa.innerHTML = '';
   $conversa.hidden = true;
   temConversa = false;
+  document.body.classList.remove('em-conversa');
   $hero.hidden = false;
   $hero.classList.remove('hero--saindo');
   $campo.value = '';

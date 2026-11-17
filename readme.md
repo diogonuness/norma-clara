@@ -126,7 +126,10 @@ da digitação começar, então o cartão não pula.
 **Artigo recolhido.** Com o texto literal, muitos artigos ficaram longos (o
 maior passa de 1.700 caracteres), e a explicação ia parar fora da tela. Por
 isso "O que diz o artigo" mostra no máximo 6 linhas, com um degradê na base, e
-o botão "Ler artigo completo" expande o resto ("Mostrar menos" recolhe). A
+o botão "Ler artigo completo" expande o resto ("Mostrar menos" recolhe). Em
+telas pequenas (até 374 px de largura ou até 700 px de altura, como o iPhone
+SE), são 4 linhas, e durante a conversa o aviso de protótipo sai da faixa do
+composer. Com 6 linhas, no iPhone SE a explicação começava atrás do composer. A
 decisão de recolher vem da altura real do texto, medida depois que as fontes
 carregam, e não da contagem de caracteres: artigos que cabem em 6 linhas não
 ganham botão nem degradê. Ao mudar a largura da janela, os cards são medidos de

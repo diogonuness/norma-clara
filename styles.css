@@ -1065,6 +1065,13 @@ body[data-estado="listening"] .composer__mic::after {
   .composer__campo--com-lixeira .composer__input { padding-right: 38px; }
 }
 
+/* telas baixas (iPhone SE, notebook de 600 px): durante a conversa o aviso de
+   protótipo sai da faixa do composer, que libera ~40 px para a explicação.
+   Ele continua na tela inicial, e o card tem seus próprios selos. */
+@media (max-height: 700px) {
+  body.em-conversa .faixa__rodape { display: none; }
+}
+
 /* ---------- prefers-reduced-motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   .veu,
