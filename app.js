@@ -473,15 +473,18 @@ function montarCard(resposta) {
   chips.append(literal
     ? el('span', 'chip-oficial', 'Texto oficial')
     : el('span', 'chip-resumo', 'Resumo · confira no PDF'));
-  if (!reduzirMovimento) {
-    /* some quando a digitação termina; o clique sobe até o card, que pula */
-    const dica = el('button', 'card__pular', 'Toque para ver tudo');
-    dica.type = 'button';
-    chips.append(dica);
-  }
   card.append(chips);
 
-  card.append(el('p', 'card__rotulo', literal ? 'O que diz o artigo' : 'Resumo do artigo'));
+  const rotuloArtigo = el('p', 'card__rotulo card__rotulo--artigo', literal ? 'O que diz o artigo' : 'Resumo do artigo');
+  if (!reduzirMovimento) {
+    /* sobreposta à direita do rótulo, fora do fluxo: nunca empurra nada e fica
+       ao lado do texto que está sendo digitado. Some quando a digitação
+       termina; o clique sobe até o card, que pula. */
+    const dica = el('button', 'card__pular', 'Toque para ver tudo');
+    dica.type = 'button';
+    rotuloArtigo.append(dica);
+  }
+  card.append(rotuloArtigo);
   const oficial = criarDigitavel();
   const blocoOficial = el('div', literal ? 'card__oficial' : 'card__oficial card__oficial--resumo');
   /* o corpo pode ficar recolhido em 6 linhas; o botão só aparece se o

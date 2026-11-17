@@ -401,13 +401,24 @@ body[data-estado="listening"] .veu {
   padding: 3px 7px;
 }
 
-/* dica de pular a digitação: ocupa seu lugar até o fim (sem salto de layout) */
+/* dica de pular a digitação: sobreposta à direita do rótulo "O que diz o
+   artigo", fora do fluxo. Na linha das etiquetas ela descia para uma 2ª
+   linha e deixava um vão ao sumir; no canto de baixo do card cobria as ações
+   do rodapé e, em card longo, ficava abaixo da dobra durante a digitação. */
+.card__rotulo--artigo { position: relative; }
 .card__pular {
-  margin-left: auto;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   border: 0;
   background: none;
   padding: 2px 0;
   font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: nowrap;
   color: var(--ink-faint);
   transition: opacity 200ms var(--ease), color 150ms var(--ease);
 }
