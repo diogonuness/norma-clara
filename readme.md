@@ -119,6 +119,19 @@ A explicação vem sempre depois do texto e nunca o substitui. Se ela falhar, o
 texto do artigo continua na tela. As alturas dos dois blocos são reservadas antes
 da digitação começar, então o cartão não pula.
 
+**Artigo recolhido.** Com o texto literal, muitos artigos ficaram longos (o
+maior passa de 1.700 caracteres), e a explicação ia parar fora da tela. Por
+isso "O que diz o artigo" mostra no máximo 6 linhas, com um degradê na base, e
+o botão "Ler artigo completo" expande o resto ("Mostrar menos" recolhe). A
+decisão de recolher vem da altura real do texto, medida depois que as fontes
+carregam, e não da contagem de caracteres: artigos que cabem em 6 linhas não
+ganham botão nem degradê. Ao mudar a largura da janela, os cards são medidos de
+novo. A expansão usa `interpolate-size: allow-keywords`; sem ele, usa
+`grid-template-rows: minmax(6 linhas, 0fr) → 1fr`. Com `prefers-reduced-motion`,
+ela é instantânea. Só a parte visível do artigo é digitada (em até 1 s); o resto
+entra pronto, escondido. "Ver PDF" continua destacando o artigo inteiro, e o
+leitor de tela recebe o texto completo.
+
 A digitação segue uma linha do tempo, com pausa extra depois de `.` e `,`. O
 ritmo é de no máximo 18 ms por caractere no artigo e 55 ms na linguagem simples,
 e os tetos são de 1,4 s e 3,8 s: texto curto mantém o ritmo e texto longo é

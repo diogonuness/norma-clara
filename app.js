@@ -371,13 +371,15 @@ function digitar(digitavel, texto, opcoes) {
     return esperar(130);
   }
   const chars = Array.from(texto);
-  const tempos = new Array(chars.length);
+  /* ate: só esses primeiros caracteres são digitados; o resto entra de uma vez */
+  const ultimo = opcoes.ate ? Math.min(opcoes.ate, chars.length) : chars.length;
+  const tempos = new Array(ultimo);
   let t = 0;
-  chars.forEach((ch, i) => {
+  for (let i = 0; i < ultimo; i++) {
     t += opcoes.msPorChar;
     tempos[i] = t;
-    if (opcoes.pausaPontuacao && (ch === '.' || ch === ',')) t += opcoes.pausaPontuacao;
-  });
+    if (opcoes.pausaPontuacao && (chars[i] === '.' || chars[i] === ',')) t += opcoes.pausaPontuacao;
+  }
   const escala = t > opcoes.teto ? opcoes.teto / t : 1;
 
   const cursor = el('span', 'cursor');
@@ -391,7 +393,10 @@ function digitar(digitavel, texto, opcoes) {
       const decorrido = (agora - inicio) / escala;
       let n = mostrados;
       if (controle.pular) n = chars.length;
-      else while (n < chars.length && tempos[n] <= decorrido) n++;
+      else {
+        while (n < ultimo && tempos[n] <= decorrido) n++;
+        if (n >= ultimo) n = chars.length;
+      }
       if (n !== mostrados) { mostrados = n; alvo.textContent = chars.slice(0, n).join(''); }
       if (mostrados >= chars.length) { cursor.remove(); resolve(); return; }
       requestAnimationFrame(quadro);
@@ -447,8 +452,22 @@ function montarCard(resposta) {
   card.append(el('p', 'card__rotulo', literal ? 'O que diz o artigo' : 'Resumo do artigo'));
   const oficial = criarDigitavel();
   const blocoOficial = el('div', literal ? 'card__oficial' : 'card__oficial card__oficial--resumo');
-  blocoOficial.append(oficial.wrap);
+  /* o corpo pode ficar recolhido em 6 linhas; o botão só aparece se o
+     artigo não couber (medido depois das fontes, em avaliarRecolhimento) */
+  const corpo = el('div', 'card__oficial-corpo');
+  corpo.id = 'artigo-' + (contadorCartoes + 1);
+  corpo.append(oficial.wrap);
+  blocoOficial.append(corpo);
   card.append(blocoOficial);
+  const expandir = el('button', 'card__expandir');
+  expandir.type = 'button';
+  expandir.hidden = true;
+  expandir.setAttribute('aria-expanded', 'false');
+  expandir.setAttribute('aria-controls', corpo.id);
+  expandir.append(el('span', 'card__expandir-texto', 'Ler artigo completo'));
+  expandir.insertAdjacentHTML('beforeend', '<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>');
+  expandir.addEventListener('click', () => alternarArtigo(blocoOficial, expandir));
+  card.append(expandir);
 
   card.append(el('p', 'card__rotulo', 'Em linguagem simples · IA'));
   const simples = criarDigitavel();
@@ -473,10 +492,72 @@ function montarCard(resposta) {
     card.append(montarRelacionados(resposta, card));
   }
 
-  return { card, oficial, simples };
+  return { card, oficial, simples, blocoOficial, expandir };
 }
 
 let contadorCartoes = 0;
+
+/* ---------- artigo recolhido ----------
+   Seis linhas visíveis, com degradê na base; "Ler artigo completo" expande.
+   Decide pela altura real do texto (depois das fontes), não pelo número de
+   caracteres: 300 caracteres cabem em 6 linhas no desktop e não no celular. */
+const LINHAS_RECOLHIDAS = 6;
+
+function avaliarRecolhimento(bloco, expandir) {
+  const fantasma = bloco.querySelector('.digitavel__fantasma');
+  const corpo = bloco.querySelector('.card__oficial-corpo');
+  const linha = parseFloat(getComputedStyle(fantasma).lineHeight);
+  const limite = Math.round(linha * LINHAS_RECOLHIDAS);
+  const precisa = fantasma.offsetHeight > limite + 2;
+  corpo.style.setProperty('--altura-recolhida', limite + 'px');
+  bloco.classList.toggle('card__oficial--recolhivel', precisa);
+  expandir.hidden = !precisa;
+  return precisa ? limite : null;
+}
+
+/* Quantos caracteres do texto cabem na altura recolhida: busca binária com
+   Range sobre o fantasma, que já tem o texto inteiro na tipografia final. */
+function caracteresVisiveis(fantasma, limite) {
+  const no = fantasma.firstChild;
+  if (!no) return 0;
+  const topo = fantasma.getBoundingClientRect().top;
+  const faixa = document.createRange();
+  let lo = 0, hi = no.length;
+  while (lo < hi) {
+    const meio = Math.ceil((lo + hi) / 2);
+    faixa.setStart(no, 0);
+    faixa.setEnd(no, meio);
+    if (faixa.getBoundingClientRect().bottom - topo <= limite + 1) lo = meio; else hi = meio - 1;
+  }
+  return Array.from(no.data.slice(0, lo)).length;
+}
+
+function alternarArtigo(bloco, expandir) {
+  const abrir = !bloco.classList.contains('card__oficial--aberto');
+  bloco.classList.toggle('card__oficial--aberto', abrir);
+  expandir.setAttribute('aria-expanded', String(abrir));
+  expandir.querySelector('.card__expandir-texto').textContent = abrir ? 'Mostrar menos' : 'Ler artigo completo';
+  if (!abrir) {
+    /* ao recolher um artigo longo, o botão pode ter subido para fora da tela */
+    setTimeout(() => {
+      const r = expandir.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > innerHeight) expandir.scrollIntoView({ block: 'center', behavior: 'auto' });
+    }, reduzirMovimento ? 0 : 200);
+  }
+}
+
+/* a quebra de linha muda com a largura: reavalia os cards ao redimensionar */
+let timerRecolher = null;
+addEventListener('resize', () => {
+  clearTimeout(timerRecolher);
+  timerRecolher = setTimeout(() => {
+    document.querySelectorAll('.card').forEach(c => {
+      const bloco = c.querySelector('.card__oficial');
+      const botao = c.querySelector('.card__expandir');
+      if (bloco && botao) avaliarRecolhimento(bloco, botao);
+    });
+  }, 150);
+});
 
 /* ---------- ações do card: copiar e avaliar ---------- */
 const ICONES = {
@@ -825,7 +906,7 @@ async function mostrarResposta(resposta, g, depoisDe) {
   const textoSimples = resposta.linguagemSimples ||
     'Não foi possível gerar a explicação agora. O texto do artigo acima continua valendo.';
 
-  const { card, oficial, simples } = montarCard(resposta);
+  const { card, oficial, simples, blocoOficial, expandir } = montarCard(resposta);
   /* alturas reservadas desde o início: o fantasma já contém o texto completo */
   oficial.fantasma.textContent = resposta.textoOficial;
   simples.fantasma.textContent = textoSimples;
@@ -841,6 +922,13 @@ async function mostrarResposta(resposta, g, depoisDe) {
   } else {
     $conversa.append(card);
   }
+
+  /* com o card no DOM e as fontes prontas, decide se o artigo recolhe; a
+     reserva de altura passa a ser a recolhida, então não há salto depois */
+  if (document.fonts && document.fonts.status !== 'loaded') await document.fonts.ready;
+  if (g !== geracao) return;
+  const limite = avaliarRecolhimento(blocoOficial, expandir);
+  const visiveis = limite ? caracteresVisiveis(oficial.fantasma, limite) : null;
   rolar(card);
 
   /* leitor de tela recebe o texto completo uma vez só */
@@ -856,9 +944,11 @@ async function mostrarResposta(resposta, g, depoisDe) {
   if (!controle.pular) await esperar(reduzirMovimento ? 0 : 150);
   if (g !== geracao) return;
 
-  /* ritmo máximo de 18 ms (artigo) e 55 ms (linguagem simples) por caractere;
-     tetos de 1,4 s e 3,8 s: do envio ao fim, uma resposta fica abaixo de 6 s */
-  await digitar(oficial, resposta.textoOficial, { msPorChar: 18, teto: 1400, controle });
+  /* ritmo máximo de 18 ms (artigo) e 55 ms (linguagem simples) por caractere.
+     Artigo recolhido: digita só o que se vê, em até 1 s; o restante entra
+     pronto, escondido, e aparece ao expandir. Tetos de 1,4 s e 3,8 s. */
+  await digitar(oficial, resposta.textoOficial,
+    visiveis ? { msPorChar: 18, teto: 1000, ate: visiveis, controle } : { msPorChar: 18, teto: 1400, controle });
   if (g !== geracao) return;
   if (!controle.pular) await esperar(reduzirMovimento ? 0 : 150);
   if (g !== geracao) return;

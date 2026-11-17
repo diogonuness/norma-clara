@@ -467,6 +467,59 @@ body[data-estado="listening"] .veu {
   line-height: 1.5;
 }
 
+/* ---------- artigo recolhido em 6 linhas ---------- */
+.card__oficial-corpo { position: relative; }
+.card__oficial--recolhivel .card__oficial-corpo {
+  interpolate-size: allow-keywords;
+  height: var(--altura-recolhida);
+  overflow: hidden;
+  transition: height 180ms var(--ease);
+}
+.card__oficial--recolhivel.card__oficial--aberto .card__oficial-corpo { height: auto; }
+/* degradê suave para a cor do card na base do trecho recolhido */
+.card__oficial--recolhivel .card__oficial-corpo::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2.9em;
+  background: linear-gradient(to bottom, rgba(250, 250, 241, 0), var(--surface));
+  pointer-events: none;
+  transition: opacity 180ms var(--ease);
+}
+.card__oficial--aberto .card__oficial-corpo::after { opacity: 0; }
+@supports not (interpolate-size: allow-keywords) {
+  .card__oficial--recolhivel .card__oficial-corpo {
+    height: auto;
+    display: grid;
+    grid-template-rows: minmax(var(--altura-recolhida), 0fr);
+    transition: grid-template-rows 180ms var(--ease);
+  }
+  .card__oficial--recolhivel.card__oficial--aberto .card__oficial-corpo {
+    grid-template-rows: minmax(var(--altura-recolhida), 1fr);
+  }
+  .card__oficial--recolhivel .card__oficial-corpo > .digitavel { min-height: 0; overflow: hidden; }
+}
+.card__oficial--recolhivel { margin-bottom: 8px; }
+.card__expandir {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 16px;
+  border: 0;
+  background: none;
+  padding: 4px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-900);
+  border-radius: 4px;
+  transition: color 150ms var(--ease);
+}
+.card__expandir svg { transition: transform 180ms var(--ease); }
+.card__expandir[aria-expanded="true"] svg { transform: rotate(180deg); }
+@media (hover: hover) and (pointer: fine) {
+  .card__expandir:hover { color: #1A432F; text-decoration: underline; text-underline-offset: 3px; }
+}
+
 .card__simples {
   background: var(--plain-bg);
   border-radius: 8px;
@@ -1038,5 +1091,8 @@ body[data-estado="listening"] .composer__mic::after {
   .modal[data-entrando] .modal__janela { transform: none; }
   body[data-estado="listening"] .composer__mic::after { animation: none; }
   .relacionados[open] .relacionados__lista { animation: none; }
+  .card__oficial-corpo,
+  .card__oficial-corpo::after,
+  .card__expandir svg { transition: none !important; }
   .cursor { animation: none; }
 }
