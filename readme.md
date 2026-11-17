@@ -146,6 +146,15 @@ e sem isso o destaque falharia na POLAE e no Disciplinar.
 
 Documentos sem PDF local abrem o link oficial do IFTO em outra aba.
 
+Abaixo do rodapé do card, "Outros artigos relacionados (N)" fica recolhido e
+lista até 3 artigos no formato `Art. N · Assunto · Documento`. Eles saem dos
+resultados da mesma busca, vigentes, com pontuação de pelo menos metade da do
+primeiro e **do mesmo tema** da resposta. Só a regra dos 50% não filtrava nada,
+porque as pontuações ficam todas perto do topo: "Perdi a prova" listava "O que dá
+advertência por escrito", que fala em "nota de prova". Se nenhum passar, o bloco
+não aparece. Clicar numa linha abre o card completo do artigo logo abaixo, sem
+uma nova pergunta.
+
 O formato que o cartão consome (montado por `respostaDoMotor()` em `app.js`):
 
 ```json

@@ -441,7 +441,37 @@ function montarCard(resposta) {
   rodape.append(baixar);
   card.append(rodape);
 
+  card.dataset.cartao = String(++contadorCartoes);
+  if (resposta.relacionados && resposta.relacionados.length) {
+    card.append(montarRelacionados(resposta, card));
+  }
+
   return { card, oficial, simples };
+}
+
+let contadorCartoes = 0;
+
+/* "Outros artigos relacionados": recolhido; cada linha abre o card do artigo */
+function montarRelacionados(resposta, card) {
+  const det = el('details', 'relacionados');
+  det.append(el('summary', 'relacionados__resumo',
+    'Outros artigos relacionados (' + resposta.relacionados.length + ')'));
+  const lista = el('ul', 'relacionados__lista');
+  resposta.relacionados.forEach(i => {
+    const n = NORMAS[i];
+    const d = DOCUMENTOS[n.doc];
+    const li = el('li');
+    const b = el('button', 'relacionados__item');
+    b.type = 'button';
+    b.append(el('span', 'relacionados__artigo', n.artigo), ' · ',
+      el('span', 'relacionados__assunto', n.assunto), ' · ',
+      el('span', 'relacionados__doc', d.nomeCurto || d.sigla));
+    b.addEventListener('click', () => mostrarArtigo(i, resposta.pergunta, card));
+    li.append(b);
+    lista.append(li);
+  });
+  det.append(lista);
+  return det;
 }
 
 /* ---------- fluxo de resposta ---------- */
@@ -538,18 +568,48 @@ async function responderPergunta(texto) {
   if (g !== geracao) return;
 
   if (!resposta) { mostrarAbstencao(r); return; }
+  resposta.relacionados = relacionados(r);
   await mostrarResposta(resposta, g);
 }
 
+/* Outros resultados da mesma busca que valem a pena mostrar: vigentes (o
+   filtro de vigência já vem de buscar), com pontuação de pelo menos metade
+   da do primeiro (reranking quando houve, senão RRF) e do mesmo tema da
+   resposta. As pontuações ficam todas perto do topo, então só os 50% não
+   filtravam nada: "Perdi a prova" trazia "O que dá advertência por escrito"
+   porque o artigo fala em "nota de prova". */
+function relacionados(r) {
+  const nota = x => (x.rerank != null ? x.rerank : x.rrf);
+  const [topo, ...resto] = r.resultados;
+  if (!topo) return [];
+  const tema = NORMAS[topo.i].tema;
+  return resto
+    .filter(x => nota(x) >= 0.5 * nota(topo) && NORMAS[x.i].tema === tema)
+    .slice(0, 3).map(x => x.i);
+}
+
+function esperarFimDaResposta() {
+  return new Promise(resolve => {
+    const inicio = performance.now();
+    const ver = () => (estado !== 'answering' || performance.now() - inicio > 8000) ? resolve() : setTimeout(ver, 40);
+    ver();
+  });
+}
+
 /* Abre o card completo de um artigo, sem uma nova pergunta da pessoa
-   (sugestão "Talvez você queira saber sobre" e "Outros artigos relacionados") */
-async function mostrarArtigo(i, pergunta) {
-  if (estado === 'answering' || estado === 'listening') return;
+   (sugestão "Talvez você queira saber sobre" e "Outros artigos relacionados").
+   depoisDe: card de origem; o novo entra logo abaixo dele. */
+async function mostrarArtigo(i, pergunta, depoisDe) {
+  if (estado === 'listening') return;
+  if (estado === 'answering') {
+    if (digitacaoAtual) digitacaoAtual();
+    await esperarFimDaResposta();
+  }
   const g = geracao;
   definirEstado('answering');
   const resposta = await respostaDoArtigo(NORMAS[i], pergunta || null);
   if (g !== geracao) return;
-  await mostrarResposta(resposta, g);
+  await mostrarResposta(resposta, g, depoisDe);
 }
 
 /* ---------- abstenção com saída ----------
@@ -617,7 +677,7 @@ function mostrarAbstencao(r) {
 }
 
 /* ---------- card com digitação ---------- */
-async function mostrarResposta(resposta, g) {
+async function mostrarResposta(resposta, g, depoisDe) {
   definirEstado('answering', 'Fonte encontrada · ' + (resposta.documentoCurto || resposta.documento));
 
   const semExplicacao = !resposta.linguagemSimples;
@@ -629,7 +689,17 @@ async function mostrarResposta(resposta, g) {
   oficial.fantasma.textContent = resposta.textoOficial;
   simples.fantasma.textContent = textoSimples;
   entrar(card);
-  $conversa.append(card);
+  if (depoisDe && depoisDe.isConnected) {
+    /* abaixo do card de origem e dos relacionados que já foram abertos dele */
+    let ancora = depoisDe;
+    while (ancora.nextElementSibling && ancora.nextElementSibling.dataset.origem === depoisDe.dataset.cartao) {
+      ancora = ancora.nextElementSibling;
+    }
+    card.dataset.origem = depoisDe.dataset.cartao;
+    ancora.after(card);
+  } else {
+    $conversa.append(card);
+  }
   rolar(card);
 
   /* leitor de tela recebe o texto completo uma vez só */
