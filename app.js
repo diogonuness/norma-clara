@@ -447,13 +447,12 @@ async function explicar(n, pergunta) {
   }
 }
 
-async function respostaDoMotor(pergunta) {
-  /* usa o pipeline real (busca híbrida + RRF + reranking) definido acima */
-  const r = buscar(pergunta, false);
-  if (!r.confiante || r.resultados.length === 0) return null;
-  const n = NORMAS[r.resultados[0].i];
+/* O formato que o card consome, montado a partir de um artigo de NORMAS */
+async function respostaDoArtigo(n, pergunta) {
   const d = DOCUMENTOS[n.doc];
   return {
+    id: n.id,
+    pergunta,
     documento: d.nome,
     documentoCurto: d.nomeCurto || d.sigla,
     artigo: n.artigo,
@@ -469,7 +468,25 @@ async function respostaDoMotor(pergunta) {
   };
 }
 
+const rolar = elemento =>
+  elemento.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'nearest' });
 
+function acrescentarBalao(pergunta) {
+  const balao = el('div', 'balao', pergunta);
+  entrar(balao);
+  $conversa.append(balao);
+  rolar(balao);
+}
+
+/* Envia uma pergunta pronta (chips de sugestão) como se a pessoa tivesse digitado */
+function perguntarDireto(texto) {
+  if (estado === 'answering' || estado === 'listening') return;
+  $campo.value = texto;
+  definirEstado('review');
+  responderPergunta(texto);
+}
+
+/* usa o pipeline real (busca híbrida + RRF + reranking) definido acima */
 async function responderPergunta(texto) {
   const g = geracao;
   const pergunta = texto.trim();
@@ -478,32 +495,99 @@ async function responderPergunta(texto) {
   await esconderHero();
   if (g !== geracao) return;
 
-  const balao = el('div', 'balao', pergunta);
-  entrar(balao);
-  $conversa.append(balao);
-  balao.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'nearest' });
-
+  acrescentarBalao(pergunta);
   $campo.value = '';
   autoCrescer();
   definirEstado('answering');
 
-  const resposta = await respostaDoMotor(pergunta);
+  const r = buscar(pergunta, false);
+  const confiante = r.confiante && r.resultados.length > 0;
+  const resposta = confiante ? await respostaDoArtigo(NORMAS[r.resultados[0].i], pergunta) : null;
 
   await esperar(reduzirMovimento ? 0 : 120);
   if (g !== geracao) return;
 
-  if (!resposta) {
-    const aviso = el('div', 'aviso-bot',
-      'Não encontrei essa informação nas normativas indexadas. Procure a secretaria acadêmica do seu campus ou a coordenação do curso.');
-    entrar(aviso);
-    $conversa.append(aviso);
-    aviso.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'nearest' });
-    $anuncio.textContent = aviso.textContent;
-    definirEstado('done');
-    $campo.focus({ preventScroll: true });
-    return;
+  if (!resposta) { mostrarAbstencao(r); return; }
+  await mostrarResposta(resposta, g);
+}
+
+/* Abre o card completo de um artigo, sem uma nova pergunta da pessoa
+   (sugestão "Talvez você queira saber sobre" e "Outros artigos relacionados") */
+async function mostrarArtigo(i, pergunta) {
+  if (estado === 'answering' || estado === 'listening') return;
+  const g = geracao;
+  definirEstado('answering');
+  const resposta = await respostaDoArtigo(NORMAS[i], pergunta || null);
+  if (g !== geracao) return;
+  await mostrarResposta(resposta, g);
+}
+
+/* ---------- abstenção com saída ----------
+   Mantém a frase de "não sei" e oferece para onde ir: os temas que a base
+   cobre (um chip por tema, com uma pergunta-exemplo) e, quando a busca ficou
+   perto de responder, o assunto do artigo mais próximo. "Perto" é estrito: o
+   mesmo artigo ficou em 1º nos dois braços da busca e faltou só um termo de
+   cobertura. Com critério frouxo, "horário da biblioteca" sugeriria
+   "Onde acontece a recuperação". */
+function artigoProximo(r) {
+  const topo = r.resultados[0];
+  if (!topo) return null;
+  const exigido = r.base.length >= 3 ? 2 : 1;
+  const perto = r.coberto >= 1 && r.coberto === exigido - 1 &&
+    topo.pos.lex === 1 && topo.pos.sem === 1;
+  return perto ? topo.i : null;
+}
+
+function temasDaBase() {
+  const vistos = [];
+  NORMAS.forEach(n => {
+    if (DOCUMENTOS[n.doc].situacao === 'vigente' && TEMAS[n.tema] && !vistos.includes(n.tema)) vistos.push(n.tema);
+  });
+  return vistos.slice(0, 6);
+}
+
+const ICONE_INFO = '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
+
+function mostrarAbstencao(r) {
+  const aviso = el('div', 'aviso-bot aviso-bot--abstencao');
+  const icone = el('span', 'aviso-bot__icone');
+  icone.innerHTML = ICONE_INFO;
+  const corpo = el('div', 'aviso-bot__corpo');
+  corpo.append(el('p', 'aviso-bot__texto',
+    'Não encontrei essa informação nas normativas indexadas. Procure a secretaria acadêmica do seu campus ou a coordenação do curso.'));
+
+  const proximo = artigoProximo(r);
+  if (proximo !== null) {
+    corpo.append(el('p', 'aviso-bot__rotulo', 'Talvez você queira saber sobre:'));
+    const linha = el('div', 'sugestoes');
+    const b = el('button', 'sugestao', NORMAS[proximo].assunto);
+    b.type = 'button';
+    b.addEventListener('click', () => mostrarArtigo(proximo));
+    linha.append(b);
+    corpo.append(linha);
   }
 
+  corpo.append(el('p', 'aviso-bot__rotulo', 'Posso ajudar com estes assuntos:'));
+  const chips = el('div', 'sugestoes');
+  temasDaBase().forEach(tema => {
+    const b = el('button', 'sugestao', tema);
+    b.type = 'button';
+    b.addEventListener('click', () => perguntarDireto(TEMAS[tema]));
+    chips.append(b);
+  });
+  corpo.append(chips);
+
+  aviso.append(icone, corpo);
+  entrar(aviso);
+  $conversa.append(aviso);
+  rolar(aviso);
+  $anuncio.textContent = corpo.textContent;
+  definirEstado('done');
+  $campo.focus({ preventScroll: true });
+}
+
+/* ---------- card com digitação ---------- */
+async function mostrarResposta(resposta, g) {
   definirEstado('answering', 'Fonte encontrada · ' + (resposta.documentoCurto || resposta.documento));
 
   const semExplicacao = !resposta.linguagemSimples;
@@ -516,7 +600,7 @@ async function responderPergunta(texto) {
   simples.fantasma.textContent = textoSimples;
   entrar(card);
   $conversa.append(card);
-  card.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'nearest' });
+  rolar(card);
 
   /* leitor de tela recebe o texto completo uma vez só */
   $anuncio.textContent = resposta.documento + '. ' + resposta.artigo + '. ' +

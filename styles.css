@@ -258,6 +258,52 @@ body[data-estado="listening"] .veu {
 }
 .aviso-bot[data-entrando] { opacity: 0; transform: translateY(10px); }
 
+/* abstenção: tom neutro, não de erro */
+.aviso-bot--abstencao {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 10px;
+  max-width: 100%;
+  padding: 14px 16px;
+}
+.aviso-bot__icone {
+  color: var(--ink-soft);
+  padding-top: 2px;
+  line-height: 0;
+}
+.aviso-bot__corpo { min-width: 0; }
+.aviso-bot__texto { margin: 0; }
+.aviso-bot__rotulo {
+  margin: 14px 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink-soft);
+}
+
+/* chips de pergunta e de tema (estado inicial e abstenção) */
+.sugestoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sugestao {
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.3;
+  border-radius: 999px;
+  padding: 8px 14px;
+  text-align: left;
+  transition: border-color 150ms var(--ease), transform 150ms var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sugestao:hover { border-color: var(--green-800); }
+}
+.sugestao:active { transform: scale(.97); }
+
 /* ---------- card da resposta ---------- */
 .card {
   position: relative;

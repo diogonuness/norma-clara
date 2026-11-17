@@ -48,272 +48,284 @@ const DOCUMENTOS = {
   }
 };
 
+/* Temas que a base cobre, na ordem em que aparecem nos chips de sugestão.
+   Cada um tem uma pergunta-exemplo que o motor responde com um artigo do
+   próprio tema (testes.js confere). Todo artigo de NORMAS tem um "tema" daqui. */
+const TEMAS = {
+  'Faltas e segunda chamada': 'Faltei na prova, e agora?',
+  'Notas e recuperação': 'Qual a nota mínima pra passar?',
+  'Trancamento e matrícula': 'Posso trancar a matrícula?',
+  'Auxílio estudantil': 'Quanto é o auxílio estudantil?',
+  'Punições e recursos': 'Quais são as punições que posso levar?',
+  'Trabalho docente': 'Quantas aulas por semana o professor tem que dar?'
+};
+
 const NORMAS = [
-  { id:'odp-73-i', doc:'odp', artigo:'Art. 73, I', assunto:'Frequência mínima para aprovação', tipo:'literal',
+  { id:'odp-73-i', doc:'odp', artigo:'Art. 73, I', assunto:'Frequência mínima para aprovação', tema:'Faltas e segunda chamada', tipo:'literal',
     texto:'Será considerado APROVADO o estudante que, ao final do período letivo, obtiver:\nI - frequência mínima de 75% (setenta e cinco por cento) da carga horária total dos componentes curriculares da respectiva série/ano/módulo e/ou outro tempo escolar definido em PPC e,',
     tags:'frequencia falta faltar presenca quantas faltas posso ter limite de faltas frequencia minima pra passar passar de ano aprovacao reprovacao por falta percentual minimo 75 carga horaria' },
 
-  { id:'odp-73-ii', doc:'odp', artigo:'Art. 73, II', assunto:'Nota mínima para aprovação', tipo:'literal',
+  { id:'odp-73-ii', doc:'odp', artigo:'Art. 73, II', assunto:'Nota mínima para aprovação', tema:'Notas e recuperação', tipo:'literal',
     texto:'Será considerado APROVADO o estudante que, ao final do período letivo, obtiver:\n[…]\nII - média aritmética final igual ou superior a 6,0 (seis) pontos em TODOS os componentes curriculares.',
     tags:'nota media minima aprovacao aprovado passar seis 6,0 todos componentes disciplina materia' },
 
-  { id:'odp-71-pu', doc:'odp', artigo:'Art. 71, parágrafo único', assunto:'Como se calcula a média final', tipo:'literal',
+  { id:'odp-71-pu', doc:'odp', artigo:'Art. 71, parágrafo único', assunto:'Como se calcula a média final', tema:'Notas e recuperação', tipo:'literal',
     texto:'Parágrafo único. A nota final será a média aritmética simples dos bimestres/trimestres, conforme o caso, considerando a especificidade de cada componente curricular.',
     tags:'media final calculo como calcula aritmetica bimestre trimestre nota soma' },
 
-  { id:'odp-74', doc:'odp', artigo:'Art. 74', assunto:'Abono de faltas', tipo:'literal',
+  { id:'odp-74', doc:'odp', artigo:'Art. 74', assunto:'Abono de faltas', tema:'Faltas e segunda chamada', tipo:'literal',
     texto:'A frequência às aulas e às demais atividades escolares, pelo estudante regularmente matriculado, é obrigatória, sendo vedado o abono de faltas, salvo casos prescritos em lei.',
     tags:'abono de falta justificar atestado abonar ausencia obrigatoria lei' },
 
-  { id:'odp-12-viii', doc:'odp', artigo:'Art. 12, VIII', assunto:'Notificação por excesso de faltas', tipo:'literal',
+  { id:'odp-12-viii', doc:'odp', artigo:'Art. 12, VIII', assunto:'Notificação por excesso de faltas', tema:'Faltas e segunda chamada', tipo:'literal',
     texto:'Cabe a cada campus do IFTO:\n[…]\nVIII – notificar ao Conselho Tutelar do Município, ao juiz competente da Comarca e ao respectivo representante do Ministério Público a relação dos estudantes que apresentem quantidade de faltas acima de 12,5% (doze e meio por cento), conforme tempo escolar de cada ciclo.',
     tags:'excesso falta notificacao conselho tutelar orgao protecao 12,5 por cento infrequencia' },
 
-  { id:'odp-75', doc:'odp', artigo:'Art. 75', assunto:'Segunda chamada de avaliação', tipo:'literal',
+  { id:'odp-75', doc:'odp', artigo:'Art. 75', assunto:'Segunda chamada de avaliação', tema:'Faltas e segunda chamada', tipo:'literal',
     texto:'Ao estudante que faltar a qualquer das verificações de aprendizagem ou deixar de executar trabalho escolar será facultado o direito à outra oportunidade, se esse estudante requerer à Direção/Gerência de Ensino ou a quem esta designar, no prazo de até 72 (setenta duas) horas úteis após o término do prazo de afastamento.\nParágrafo único. Somente será deferido o requerimento que constar anexo à comprovação de impedimento nas seguintes situações:\nI – problema de saúde;\nII – obrigações com o Serviço Militar;\nIII – pelo exercício do voto (um dia anterior e um dia posterior à data de eleição, se coincidentes com a realização da prova);\nIV – convocação pelo Poder Judiciário ou pela Justiça Eleitoral;\nV – viagem, autorizada pelo IFTO, para representação em atividades desportivas, culturais, de ensino e/ou pesquisa e/ou extensão;\nVI – acompanhamento de dependentes em caso de defesa da saúde;\nVII – falecimento de parente (cônjuge, companheiro(a), pais, padrasto, madrasta, filhos enteados, menor sob guarda ou tutela ou irmãos), desde que a avaliação tenha acontecido no período de até 8 (oito) dias após falecimento;\nVIII – doação voluntária de sangue (no dia de sua doação);\nIX - estudante que integrar representação desportiva nacional, conforme art. 85 da Lei n.º 9.615, de 24 de março de 1998 - “Lei Pelé”;\nX – demais atividades promovidas pelo IFTO para as quais o estudante tenha sido autorizado ou convocado;\nXI – por questões relativas a trabalho devidamente comprovadas/justificadas.\nParágrafo único. Todos os trâmites processuais quanto à matéria serão acompanhados pela Direção/Gerência de Ensino ou por quem esta designar, devendo proceder aos encaminhamentos que se fizerem necessários até sua efetiva conclusão.',
     tags:'segunda chamada perdi prova faltei avaliacao reposicao prazo 72 horas requerer atestado trabalho nao entregue' },
 
-  { id:'odp-80', doc:'odp', artigo:'Art. 80', assunto:'Recuperação paralela', tipo:'literal',
+  { id:'odp-80', doc:'odp', artigo:'Art. 80', assunto:'Recuperação paralela', tema:'Notas e recuperação', tipo:'literal',
     texto:'A recuperação é o processo pelo qual é concedida ao estudante a possibilidade de sanar dificuldades inerentes ao ensino-aprendizagem.\n§1º A recuperação será paralela e contínua no que diz respeito às bases tecnológicas e científicas (conteúdos) e de competências/habilidades, ocorrendo durante as etapas intermediárias (bimestre/trimestre) proposta no PPC.\n§2º Caberá ao docente proporcionar de forma paralela, contínua e com instrumentos avaliativos diversificados a recuperação da nota ou conceito ao estudante que não logrou êxito, ou seja, nota menor que 6,0 (seis), nas etapas intermediárias (bimestre/trimestre).\n§3º No processo de recuperação paralela, serão desenvolvidas atividades diversificadas, com vista a subsidiar, provocar e promover o desenvolvimento do estudante nos aspectos cognitivos, afetivos e sociais e a nota aferida na recuperação quando superior a anterior, substituíra a nota inferior.',
     tags:'recuperacao paralela continua nota baixa reforco refazer substituir nota bimestre' },
 
-  { id:'odp-81', doc:'odp', artigo:'Art. 81', assunto:'Onde acontece a recuperação', tipo:'literal',
+  { id:'odp-81', doc:'odp', artigo:'Art. 81', assunto:'Onde acontece a recuperação', tema:'Notas e recuperação', tipo:'literal',
     texto:'Os estudos de recuperação paralela poderão ser realizados:\nI - em sala de aula, desde que se privilegie a recuperação de elementos curriculares em defasagem, e não a realização de provas em dias letivos e horários regulares para o turno do curso;\nII – durante os horários de atendimento do PEBTT, que se responsabilizará por estabelecer tais horários e divulgá-los aos estudantes.',
     tags:'recuperacao onde horario atendimento professor sala de aula monitoria' },
 
-  { id:'odp-83', doc:'odp', artigo:'Art. 83', assunto:'Quem compõe o conselho de classe', tipo:'literal',
+  { id:'odp-83', doc:'odp', artigo:'Art. 83', assunto:'Quem compõe o conselho de classe', tema:'Notas e recuperação', tipo:'literal',
     texto:'Constituirão o Conselho de Classe/Análise de Turma, além da Direção/Gerência de Ensino, todos os PEBTTs da turma, o representante dos estudantes, o coordenador de curso/área e um representante da equipe técnico-pedagógica.\n§1º Conforme logística de cada Campus e de forma gradativa, deverão compor esse conselho toda a equipe de apoio pedagógico dentre eles os assistentes de estudantes, psicólogos, assistentes sociais e outros profissionais do Campus.\n§ 2º Faculta-se a publicação de ato administrativo complementar conforme a realidade de cada Campus nominando cada ente que deverá compor o conselho de classe/análise de turma.\n§3º Faculta-se a inserção de pais ou responsáveis tutelares nos Conselhos de Análise de Classe/Análise de Turma.',
     tags:'conselho de classe composicao quem participa representante estudante coordenador' },
 
-  { id:'odp-85', doc:'odp', artigo:'Art. 85', assunto:'Quando o conselho de classe se reúne', tipo:'literal',
+  { id:'odp-85', doc:'odp', artigo:'Art. 85', assunto:'Quando o conselho de classe se reúne', tema:'Notas e recuperação', tipo:'literal',
     texto:'O Conselho de Classe/Análise de Turma se reunirá minimamente ao final de cada etapa (bimestralmente, trimestralmente ou outro tempo escolar conforme PPC), em caráter ordinário, com previsão no calendário acadêmico e, em caráter excepcional, quando convocado pela Direção/Gerência de Ensino, para tratar de assunto específico.',
     tags:'conselho de classe reuniao quando final bimestre etapa convocacao' },
 
-  { id:'odp-86-87', doc:'odp', artigo:'Art. 86 e Art. 87', assunto:'Conselho de classe e o aluno com média abaixo de 6,0', tipo:'literal',
+  { id:'odp-86-87', doc:'odp', artigo:'Art. 86 e Art. 87', assunto:'Conselho de classe e o aluno com média abaixo de 6,0', tema:'Notas e recuperação', tipo:'literal',
     texto:'Ao final do período letivo, o Conselho de Classe/Análise de Turma analisará a situação de todos os estudantes com média inferior a 6,0 em um ou mais componentes curriculares, tendo a possibilidade de aprová-los em conselho.\nArt. 87. Como critérios de análise o Conselho considerará:\nI - a média global (média aritmética simples de todos componentes curriculares), maior ou igual a 5,0 (cinco), obtida pelo estudante, e/ou;\nII – a quantidade de componentes curriculares com média inferior a 6,0 (seis) em até 50% (cinquenta por cento) do total de componentes curriculares do tempo escolar cursado (semestre/ano).\nParágrafo único. Esgotadas as possibilidades previstas nos incisos I e II, outros critérios poderão ser deliberados pelo Conselho de Análise de Turma, considerando as especificidades de cada turma.',
     tags:'conselho de classe passei no conselho aprovado pelo conselho aprovar passar media global 5,0 metade componentes reprovado' },
 
-  { id:'odp-110', doc:'odp', artigo:'Art. 110', assunto:'Trancamento de matrícula', tipo:'literal',
+  { id:'odp-110', doc:'odp', artigo:'Art. 110', assunto:'Trancamento de matrícula', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'O trancamento de matrícula será concedido mediante preenchimento de requerimento, seguido de sua comprovação, protocolizado e encaminhado à Direção/Gerência de Ensino ou a quem esta delegar, e será facultado nos seguintes casos:\nI – estudante convocado pelo serviço militar;\nII – tratamento de saúde prolongado;\nIII – gravidez comprovada por atestado médico, conforme legislação específica;\nIV – acompanhamento de cônjuge e/ou parente de primeiro grau que esteja em tratamento de saúde.\n§1º Os casos não contemplados os incisos I, II, III e IV serão encaminhados à Direção/Gerência de Ensino ou a quem esta delegar, podendo ser ouvida a coordenação do curso, para emissão de parecer conclusivo sobre a matéria.\n§2º Salvo os casos especificados em lei, fica vedado o trancamento no primeiro ano/semestre/módulo.\n§3º Não havendo mais a série/ano/módulo do respectivo curso objeto de trancamento, a reabertura poderá ser efetivada na mesma série/ano/módulo de um curso de mesmo eixo ou afim, nível e modalidade, desde que haja a vaga remanescente/ociosa e sejam realizadas as adaptações necessárias.',
     tags:'trancar trancamento matricula posso trancar quero trancar pausar parar o curso afastar servico militar gravidez saude primeiro ano' },
 
-  { id:'odp-111', doc:'odp', artigo:'Art. 111', assunto:'Prazo para reabrir a matrícula trancada', tipo:'literal',
+  { id:'odp-111', doc:'odp', artigo:'Art. 111', assunto:'Prazo para reabrir a matrícula trancada', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'O estudante que não reabrir a matrícula no prazo máximo de dois semestres letivos e/ou não proceder à justificativa de prorrogação de prazo, junto a CORES ou ao setor responsável, terá sua matrícula cancelada.',
     tags:'trancamento prazo reabrir voltar retorno dois semestres cancelada perder vaga' },
 
-  { id:'odp-40', doc:'odp', artigo:'Art. 40', assunto:'Cancelamento da matrícula', tipo:'literal',
+  { id:'odp-40', doc:'odp', artigo:'Art. 40', assunto:'Cancelamento da matrícula', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'O estudante terá sua matrícula cancelada quando:\nI – solicitado por este ou seu representante legal, via requerimento no protocolo;\nII – não concluir o seu curso dentro do prazo máximo para integralização;\nIII - apresentar para matrícula ou a qualquer tempo documento falso ou falsificado ou adulterado, ficando o responsável passível das sanções legais;\nIV - cometer irregularidade ou infração disciplinar, passível de expulsão;\nV - não efetivar a matrícula dentro dos prazos previstos em calendário escolar;\nVI – sendo estrangeiro, estiver em situação irregular;\nVIII – estando com matrícula trancada e não reabri-la no prazo que culmine com sua integralização.\n§1º O cancelamento da matrícula dar-se-á pela ocorrência de um ou mais incisos deste artigo.\n§2º Ficam assegurados o direito a ampla defesa e de nova submissão ao processo seletivo ao estudante que tiver sua matrícula cancelada, salvo exceções previstas neste regulamento.\n§3º Não se aplica o exposto no inciso II às pessoas com necessidades educacionais específicas.',
     tags:'cancelamento cancelar matricula quero sair do curso desistir largar o curso abandonar desligamento desligado expulsao perder a vaga voltar processo seletivo' },
 
-  { id:'odp-104', doc:'odp', artigo:'Art. 104', assunto:'Como pedir aproveitamento de estudos', tipo:'literal',
+  { id:'odp-104', doc:'odp', artigo:'Art. 104', assunto:'Como pedir aproveitamento de estudos', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'Fica assegurado ao estudante juridicamente capaz, ou ao seu responsável legal, conforme o caso, a solicitação de aproveitamento de estudos formais e informais realizados no Brasil e/ou em país estrangeiro mediante requerimento dirigido à Direção/Gerência de Ensino ou a quem esta delegar.',
     tags:'aproveitamento de estudos requerimento aproveitar disciplina ja cursada aproveitar materia onde entregar o requerimento materia que ja fiz disciplina que ja fiz cursei em outra escola' },
 
-  { id:'odp-105', doc:'odp', artigo:'Art. 105', assunto:'Quem analisa o aproveitamento de estudos', tipo:'literal',
+  { id:'odp-105', doc:'odp', artigo:'Art. 105', assunto:'Quem analisa o aproveitamento de estudos', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'Cabem à coordenação de curso e/ou à coordenação técnico-pedagógica do Campus, a análise do mérito, conforme este regulamento e outras legislações.\n§ 1º O parecer deverá conter as seguintes partes:\nI – do Relatório – onde o relator descreverá sucintamente os autos processuais que foram considerados;\nII – da Análise – onde o relator embasará sua análise conforme ordenamento jurídico vigente e fundamentação pedagógica;\nIII – do Voto – onde o relator, mediante o exposto no relatório e análise, apresenta o DEFERIMENTO ou INDEREFIMENTO indicando despacho.\n§2º O voto deverá apresentar a seguinte deliberação:\nI – aproveitamento total, reduzido a termo e autuado na pasta do estudante e registrado em histórico escolar;\nII – aproveitamento parcial indicando ao requerente/interessado procedimentos para complementação de estudos, adaptações ou outros;\nIII – indeferimento do aproveitamento indicando os motivos que levaram à decisão.',
     tags:'aproveitamento analise coordenacao resultado total parcial indeferido complementacao' },
 
-  { id:'odp-106', doc:'odp', artigo:'Art. 106', assunto:'Exame de proficiência', tipo:'literal',
+  { id:'odp-106', doc:'odp', artigo:'Art. 106', assunto:'Exame de proficiência', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'Resguarda-se ao Campus, nos reconhecimentos informais e havendo dúvidas quanto às alegações apresentadas pelo requerente nos autos processuais, a possibilidade de exames teórico-práticos de proficiência para fins de aproveitamento.',
     tags:'exame de proficiencia equivalencia duvida teorico pratico avaliar conhecimento' },
 
-  { id:'odp-108', doc:'odp', artigo:'Art. 108', assunto:'Aproveitamento de certificados do ENEM', tipo:'literal',
+  { id:'odp-108', doc:'odp', artigo:'Art. 108', assunto:'Aproveitamento de certificados do ENEM', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'Os Campi aproveitarão os certificados parciais e totais dos estudantes que obtiverem pontuação igual ou superior aos mínimos exigidos para certificação e/ou para declaração parcial constante no Exame Nacional do Ensino Médio – ENEM.',
     tags:'enem certificado aproveitamento exame nacional ensino medio usar o enem para aproveitar disciplina materia componente curricular nota do enem' },
 
-  { id:'odp-109', doc:'odp', artigo:'Art. 109', assunto:'Aproveitamento para quem foi reprovado', tipo:'literal',
+  { id:'odp-109', doc:'odp', artigo:'Art. 109', assunto:'Aproveitamento para quem foi reprovado', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'Faculta-se ao estudante que esteja reprovado em determinado ano/série/módulo o direito de solicitar aproveitamento de estudos daqueles componentes em que logrou êxito, devendo cursar apenas aqueles em que não obteve resultado satisfatório no ano/série/módulo em que ficou reprovado.\n§1º A situação prevista no caput deverá ser requerida pelo representante legal do estudante, se a situação o exigir.\n§ 2º No período/horários em que ficar dispensado de parte dos componentes curriculares, o estudante, assistido por seu responsável legal, deverá comprometer-se, conforme o caso, a se dedicar aos estudos com o propósito de sanar as dificuldades identificadas nos componentes em que não obteve êxito.',
     tags:'reprovado repetir ano aproveitar materias que passei exito refazer serie' },
 
-  { id:'odp-89-91', doc:'odp', artigo:'Art. 89, I e Art. 91, §2º', assunto:'Revisão de nota e de situação final', tipo:'literal',
+  { id:'odp-89-91', doc:'odp', artigo:'Art. 89, I e Art. 91, §2º', assunto:'Revisão de nota e de situação final', tema:'Notas e recuperação', tipo:'literal',
     texto:'Ao estudante reprovado e/ou seu representante legal que tenha esgotado suas possibilidades de revisão de nota e/ou conceito insuficientes junto ao PEBTT fica assegurado:\nI – ampla defesa e contraditório por meio de instauração de processo de revisão de situação final;\n[…]\nArt. 91. […]\n§2º As alterações de notas e/ou frequência serão efetuadas pelo PEBTT titular do componente curricular, no sistema escolar em uso, por meio de formulário específico ou na impossibilidade legal do PEBTT, pelo coordenador ou responsável do curso nos casos de deferimento de revisão de nota.',
     tags:'revisao de nota recorrer recurso contestar nota reprovado situacao final ampla defesa' },
 
-  { id:'odp-52', doc:'odp', artigo:'Art. 52', assunto:'Estágio na carga horária do curso', tipo:'literal',
+  { id:'odp-52', doc:'odp', artigo:'Art. 52', assunto:'Estágio na carga horária do curso', tema:'Trancamento e matrícula', tipo:'literal',
     texto:'A integralização dos estudos correspondentes aos conhecimentos científicos e tecnológicos será obtida pela efetivação da carga horária total fixada para cada curso, incluindo, quando for o caso, estágio, atividades complementares, trabalhos de conclusão de curso (TCC) ou outros elementos no campo do currículo, conforme especificidades previstas no PPC.',
     tags:'estagio carga horaria ppc projeto pedagogico obrigatorio curso tecnico' },
 
-  { id:'odp-78-9', doc:'odp', artigo:'Art. 78, §9º, I', assunto:'Regime domiciliar e estágio', tipo:'literal',
+  { id:'odp-78-9', doc:'odp', artigo:'Art. 78, §9º, I', assunto:'Regime domiciliar e estágio', tema:'Faltas e segunda chamada', tipo:'literal',
     texto:'§9º Fica vedada a concessão de regime de exercício domiciliar para estudantes que:\nI - estejam faltando apenas à realização de estágios; e',
     tags:'regime domiciliar exercicio domiciliar atestado longo estagio afastamento aula em casa' },
 
-  { id:'polae-30', doc:'polae', artigo:'Art. 30', assunto:'Quem pode receber auxílio estudantil', tipo:'literal',
+  { id:'polae-30', doc:'polae', artigo:'Art. 30', assunto:'Quem pode receber auxílio estudantil', tema:'Auxílio estudantil', tipo:'literal',
     texto:'Para fins de concessão de auxílios financeiros, o Eixo de Serviços Essenciais é destinado a estudantes regularmente matriculados e frequentes nos cursos do ensino médio (integrado, subsequente e concomitante e PROEJA) e superior (bacharelado, tecnológico e licenciatura) que se encontram em situação de vulnerabilidade, de modo a atender com prioridade aqueles com renda per capita familiar de até 1,5 salário-mínimo e meio, visando essencialmente contribuir para a redução de índices de baixa frequência, retenção e evasão.\nParágrafo único. A concessão de auxílio financeiro voltado a qualquer um dos aspectos que compõem o Eixo de Serviços Essenciais ocorrerá por meio de estudo socioeconômico-cultural, via edital.',
     tags:'quem pode receber auxilio bolsa assistencia estudantil requisito matriculado frequente vulnerabilidade ensino medio integrado' },
 
-  { id:'polae-44', doc:'polae', artigo:'Art. 44', assunto:'Tipos de auxílio oferecidos', tipo:'literal',
+  { id:'polae-44', doc:'polae', artigo:'Art. 44', assunto:'Tipos de auxílio oferecidos', tema:'Auxílio estudantil', tipo:'literal',
     texto:'Em atenção aos termos do Decreto nº 7.234/2010, bem como em observação às características do Eixo de Serviços Essenciais, a concessão de recursos para esse fim visa atender às seguintes áreas essenciais ou demandas: moradia; alimentação; transporte (locomoção entre a residência e o Campus); material didático; emergencial; cuidadores (infantil ou adulto dependentes); e auxílio emergencial.\nParágrafo único. A concessão dos auxílios ocorrerá por meio de processo de seleção, atendendo prioritariamente estudantes oriundos da rede pública de educação básica ou com renda familiar per capita de até um salário mínimo e meio, sem prejuízo de demais requisitos fixados pelo IFTO, levando-se em conta os níveis de vulnerabilidade alta, média e baixa, conforme indicadores dispostos no art. 39.',
     tags:'tipos de auxilio quais bolsas moradia alimentacao transporte material didatico emergencial cuidador lista' },
 
-  { id:'polae-54', doc:'polae', artigo:'Art. 54', assunto:'Como se inscrever no auxílio', tipo:'literal',
+  { id:'polae-54', doc:'polae', artigo:'Art. 54', assunto:'Como se inscrever no auxílio', tema:'Auxílio estudantil', tipo:'literal',
     texto:'A solicitação de auxílios do Eixo de Serviços Essenciais requer do estudante, além de matrícula e frequências regulares, a realização dos seguintes procedimentos:\nI - preencher o formulário de inscrição e o questionário socioeconômico-cultural, anexando os documentos pertinentes indicados em edital e disponíveis no sistema, quando houver;\nII - apresentar documentação e comprovantes relacionados nos editais, no prazo estabelecido para efetivar a solicitação;\nIII - submeter-se à avaliação socioeconômica, realizada por profissional de Serviço Social;\nIV - participar de entrevista, visita domiciliar ou outros procedimentos que se fizerem necessários, realizados por profissional da Unidade de Gestão da Assistência Estudantil envolvido no processo de seleção;\nV - atender a critérios gerais e específicos da modalidade de auxílio solicitada;\nVI - acompanhar as divulgações pertinentes à assistência estudantil.',
     tags:'como se inscrever como pedir o auxilio como solicitar bolsa inscricao auxilio documentacao edital assistente social entrevista visita domiciliar selecao' },
 
-  { id:'polae-59', doc:'polae', artigo:'Art. 59', assunto:'Indicadores de vulnerabilidade', tipo:'literal',
+  { id:'polae-59', doc:'polae', artigo:'Art. 59', assunto:'Indicadores de vulnerabilidade', tema:'Auxílio estudantil', tipo:'literal',
     texto:'A seleção dos estudantes para concessão de auxílios será realizada a partir da análise dos níveis de vulnerabilidades alta, média e baixa, considerando os seguintes indicadores:\nI - condições de trabalho do estudante e/ou de membros da família;\nII - situação de moradia do estudante e da família, e consumo de energia do grupo familiar;\nIII - relações de dependência financeira e afetiva do estudante;\nIV - composição familiar ou domiciliar e suas relações de dependência financeira e afetiva do estudante;\nV - existência de deficiência ou doença grave, crônica ou degenerativa do estudante ou de membro do grupo familiar;\nVI - distância entre residência e Campus;\nVII - meio e condições de transporte entre residência e Campus;\nVIII - família beneficiária de programas sociais (exemplo: Bolsa Família e Benefício de Prestação Continuada - BPC);\nIX - escolaridade dos responsáveis pela manutenção do domicílio;\nX - bens patrimoniais móveis, imóveis e semoventes de pessoas físicas ou jurídicas do estudante ou da família;\nXI - despesas familiares;\nXII - renda per capita do grupo familiar;\nXIII - participação do estudante na renda familiar;\nXIV - vínculo do estudante a outros auxílios financeiros que caracterizam o acúmulo de renda;\nXV - recebimento de benefícios e de outras atividades remuneradas pela família ou estudante;\nXVI - agravantes de vulnerabilidades identificados pelo profissional durante os procedimentos de seleção.',
     tags:'indicadores criterios vulnerabilidade renda per capita composicao familiar moradia distancia campus bolsa familia' },
 
-  { id:'polae-61', doc:'polae', artigo:'Art. 61', assunto:'Grupos de vulnerabilidade', tipo:'literal',
+  { id:'polae-61', doc:'polae', artigo:'Art. 61', assunto:'Grupos de vulnerabilidade', tema:'Auxílio estudantil', tipo:'literal',
     texto:'Para a concessão dos auxílios serão considerados os seguintes grupos:\nI - Grupo 3: Contempla os estudantes com alto grau de vulnerabilidade, expressando risco de não permanecer na instituição e atingir rendimento acadêmico/escolar satisfatório por falta ou insuficiência de recurso financeiro, questões socioculturais e ambientais.\nII - Grupo 2: Contempla os estudantes com médio grau de vulnerabilidade, expressando risco de não permanecer na instituição e atingir rendimento acadêmico/escolar satisfatório por falta ou insuficiência de recurso financeiro, questões socioculturais e ambientais.\nIII - Grupo 1: Contempla os estudantes com baixo grau de vulnerabilidade, expressando risco de não permanecer na instituição e atingir rendimento acadêmico/escolar satisfatório por falta ou insuficiência de recurso financeiro, questões socioculturais e ambientais.\n§ 1º Para fins de organização e transparência, o Serviço Social do IFTO deverá sistematizar o método de seleção para concessão de auxílios e elaborar documento para apresentação do mesmo no prazo de até seis meses a partir da data de aprovação desta normativa.\n§ 2º O método de seleção será apresentado no Comitê Estratégico de Assistência Estudantil para fins de institucionalização.',
     tags:'grupo 1 2 3 classificacao vulnerabilidade alta media baixa faixa' },
 
-  { id:'polae-65', doc:'polae', artigo:'Art. 65', assunto:'Valor do auxílio por grupo', tipo:'literal',
+  { id:'polae-65', doc:'polae', artigo:'Art. 65', assunto:'Valor do auxílio por grupo', tema:'Auxílio estudantil', tipo:'literal',
     texto:'A concessão dos auxílios financeiros seguirá faixa de valores de acordo com o grupo de vulnerabilidade em que o estudante se encontra no momento do estudo socioeconômico-cultural:\nI - Grupo 3 Entre 40% e 50% do valor do salário mínimo vigente;\nII - Grupo 2 Entre 30% e 40% do valor do salário mínimo vigente;\nIII - Grupo 1 Entre 20% e 30% do valor do salário mínimo vigente;\nIV - Auxílio Emergencial: Até 150% do salário mínimo vigente, podendo ser dividido em até três vezes no ano letivo.\nParágrafo único. O valor referente a cada grupo será estabelecido em edital, de acordo com a disposição orçamentária do Campus.',
     tags:'valor do auxilio quanto recebe percentual salario minimo grupo faixa quanto paga' },
 
-  { id:'polae-66', doc:'polae', artigo:'Art. 66', assunto:'Auxílio emergencial', tipo:'literal',
+  { id:'polae-66', doc:'polae', artigo:'Art. 66', assunto:'Auxílio emergencial', tema:'Auxílio estudantil', tipo:'literal',
     texto:'O benefício do Auxílio Emergencial será oferecido circunstancialmente, de acordo com análise e parecer de assistente social ou, na ausência deste profissional, de acordo com análise e parecer de Comissão Local em conjunto com a Unidade de Gestão da Assistência Estudantil, que poderá ainda conferir encaminhamento para a rede de proteção social ou parcerias afins.\nParágrafo único. Em demandas relacionadas a epidemias, pandemias, desastres naturais ou outras situações de igual proporção de vulnerabilidades e riscos, caberá a Comissão Local de Assistência Estudantil junto com assistente(s) social(is) a análise e o parecer sobre a possibilidade de ampliação do tempo de concessão de auxílio emergencial, desde que haja disponibilidade orçamentária.',
     tags:'auxilio emergencial emergencia urgente quantas vezes ano parecer assistente social 150' },
 
-  { id:'polae-47', doc:'polae', artigo:'Art. 47', assunto:'Subsídio de refeição', tipo:'literal',
+  { id:'polae-47', doc:'polae', artigo:'Art. 47', assunto:'Subsídio de refeição', tema:'Auxílio estudantil', tipo:'literal',
     texto:'O subsídio da assistência estudantil destinado aos estudantes para as refeições nos restaurantes das unidades, quando houver, será concedido da seguinte forma:\nI - até 100% do valor de uma refeição diária para atender estudantes com renda, prioritariamente, per capita de até um salário mínimo e meio, considerando os critérios de seleção no expressos nesta normativa;\nII - até 50% do valor de uma refeição diária para atender os demais estudantes, conforme critérios estabelecidos em edital do Campus.\n§ 1º A Unidade de Gestão da Assistência Estudantil (Campus) tem autonomia para estabelecer critérios em edital para a concessão ou não dos 50% de subsídio de forma universal para estudantes com renda per capita superior a um salário mínimo e meio.\n§ 2º Em caso de atender todos os estudantes com renda per capita superior a um salário mínimo e meio, o orçamento utilizado deverá ser do Eixo Universal.',
     tags:'refeicao restaurante almoco subsidio alimentacao desconto comida' },
 
-  { id:'polae-71', doc:'polae', artigo:'Art. 71', assunto:'Frequência exigida de quem recebe auxílio', tipo:'literal',
+  { id:'polae-71', doc:'polae', artigo:'Art. 71', assunto:'Frequência exigida de quem recebe auxílio', tema:'Auxílio estudantil', tipo:'literal',
     texto:'A manutenção do recebimento mensal do auxílio estará sujeita às seguintes condicionalidades:\nI - frequência mínima global de 75% (cento) mensal e/ou,\nII - rendimento escolar/acadêmico satisfatório.',
     tags:'frequencia para manter o auxilio 75 rendimento beneficiario requisito mensal' },
 
-  { id:'polae-73', doc:'polae', artigo:'Art. 73', assunto:'Obrigações de quem recebe auxílio', tipo:'literal',
+  { id:'polae-73', doc:'polae', artigo:'Art. 73', assunto:'Obrigações de quem recebe auxílio', tema:'Auxílio estudantil', tipo:'literal',
     texto:'São responsabilidades do estudante contemplado com qualquer modalidade de auxílio:\nI - informar imediatamente à Unidade de Gestão de Assistência ao Estudantil ou a Comissão Local de Assistência Estudantil sobre quaisquer mudanças no quadro de vulnerabilidades socioeconômica-cultural;\nII - ter desempenho acadêmico/escolar mínimo para aprovação e frequência;\nIII - comunicar a Unidade de Gestão da Assistência Estudantil ou a Comissão Local de Assistência Estudantil se decidir transferir-se ou sair da Instituição;\nIV - participar de atendimentos individualizados e/ou em grupos, reuniões ou outros procedimentos/atividades quando convocado pela Unidade de Gestão da Assistência Estudantil e/ou Comissão Local de Assistência Estudantil, a partir de qualquer um dos serviços de atendimento e apoio ao estudante;\nV - devolver, por meio de Guia de Recolhimento da União (GRU), o auxílio recebido indevidamente;\nVI - possuir conta bancária em seu nome;\nVII - fazer prestação de contas;\nVIII - apresentar informações, quando solicitado.',
     tags:'obrigacoes deveres beneficiario conta bancaria devolver dinheiro gru prestar contas comunicar mudanca' },
 
-  { id:'polae-74', doc:'polae', artigo:'Art. 74', assunto:'Suspensão do auxílio (bolsa) por frequência baixa', tipo:'literal',
+  { id:'polae-74', doc:'polae', artigo:'Art. 74', assunto:'Suspensão do auxílio (bolsa) por frequência baixa', tema:'Auxílio estudantil', tipo:'literal',
     texto:'O estudante terá o seu pagamento do mês vigente suspenso, se a frequência do mês anterior for inferior a 75%, salvo em caso de faltas justificadas, na forma da legislação vigente, em suas atividades acadêmicas, ou por atestado médico;\nParágrafo único. Regularizada a frequência mínima mensal de 75%, ou formalizada justificativa plausível para a infrequência, o estudante terá o auxílio restabelecido no mês seguinte à suspensão.',
     tags:'suspensao corte do auxilio perdi a bolsa nao recebi pagamento suspenso falta frequencia por que perdi o auxilio' },
 
-  { id:'polae-68', doc:'polae', artigo:'Art. 68', assunto:'Renovação do auxílio', tipo:'literal',
+  { id:'polae-68', doc:'polae', artigo:'Art. 68', assunto:'Renovação do auxílio', tema:'Auxílio estudantil', tipo:'literal',
     texto:'A concessão de qualquer auxílio ao estudante que já tenha sido contemplado anteriormente estará condicionada ao rendimento acadêmico/escolar satisfatório, conforme estabelecido abaixo:\nI - aproveitamento de pelo menos 50% das disciplinas cursadas no ano ou semestre anterior, conforme regras do curso;\nII - a não reprovação por faltas.',
     tags:'renovar renovacao auxilio voltar a receber ano seguinte 50 por cento disciplinas reprovado por falta' },
 
-  { id:'polae-92-99', doc:'polae', artigo:'Art. 92 e Art. 99', assunto:'Programa Auxílio-Viagem', tipo:'literal',
+  { id:'polae-92-99', doc:'polae', artigo:'Art. 92 e Art. 99', assunto:'Programa Auxílio-Viagem', tema:'Auxílio estudantil', tipo:'literal',
     texto:'O Programa consistirá em uma modalidade de auxílio financeiro para custear despesas com alimentação, pernoite e passagens (aéreas ou terrestres), se houver, durante o deslocamento em viagens nas seguintes situações:\nI - para participação em eventos de ensino, extensão, pesquisa, artísticos ou culturais com apresentação de trabalhos aprovados pela comissão organizadora, em localidade distinta do Campus onde está matriculado;\nII - para participação em atividades de ensino, extensão, pesquisa, artísticas, esportivas, culturais, quando selecionado para representar o IFTO em localidade distinta do Campus onde está matriculado.\nArt 99. O valor do auxílio-viagem será concedido obedecendo aos seguintes critérios:\nI - alimentação: até 8 % do salário mínimo (diário);\nII - pernoite: até 8 % do salário mínimo (diário);\nIII - até 15% do salário mínimo, uma única vez, para despesas com alimentação durante a viagem, quando a organização do evento oferecer alimentação e hospedagem.\n§ 1º O percentual tem por referência o valor do salário mínimo vigente.\n§ 2º Não será concedido o valor do auxílio referente a alimentação e/ou pernoite se a organização do evento oferecer um ou outro, ou os dois.',
     tags:'auxilio viagem evento competicao jice participar fora do campus apoio deslocamento' },
 
-  { id:'polae-26', doc:'polae', artigo:'Art. 26, parágrafo único', assunto:'Prioridade por renda', tipo:'literal',
+  { id:'polae-26', doc:'polae', artigo:'Art. 26, parágrafo único', assunto:'Prioridade por renda', tema:'Auxílio estudantil', tipo:'literal',
     texto:'Parágrafo único. A concessão de auxílios estudantis deverá considerar, prioritariamente, estudantes cuja renda familiar per capita seja de até um salário mínimo, conforme Decreto nº 7.234/2010.',
     tags:'prioridade renda per capita salario minimo limite criterio quem tem preferencia' },
 
-  { id:'odp1-revogada', doc:'odp1', artigo:'Documento inteiro', assunto:'Edição anterior do regulamento (revogada)',
+  { id:'odp1-revogada', doc:'odp1', artigo:'Documento inteiro', assunto:'Edição anterior do regulamento (revogada)', tema:'Trancamento e matrícula',
     texto:'Esta é a 1ª edição do Regulamento da Organização Didático-Pedagógica dos cursos técnicos presenciais, revogada pela Resolução Consup nº 23/2015. Não deve ser usada como referência: a versão vigente é a 2ª edição.',
     tags:'regulamento antigo primeira edicao revogada versao anterior 2011 desatualizada' },
 
-  { id:'disc-4', doc:'disciplinar', artigo:'Art. 4º', assunto:'Direitos dos estudantes', tipo:'literal',
+  { id:'disc-4', doc:'disciplinar', artigo:'Art. 4º', assunto:'Direitos dos estudantes', tema:'Punições e recursos', tipo:'literal',
     texto:'São direitos dos discentes do IFTO:\nI - ter igualdade de condições para acesso e permanência na instituição;\nII - receber educação de qualidade, que promova o seu desenvolvimento profissional e humano;\nIII - ser respeitado por seus professores, coordenadores, servidores técnico-administrativos e colegas de classe;\n[…]\nVI - contestar critérios avaliativos, podendo recorrer às instâncias administrativas e, esgotando essas esferas, recorrer às instâncias superiores externas ao IFTO;\nVII - representar à coordenação ou ao setor competente do campus ou do polo, por escrito, contra irregularidades, abusos de poder e omissões de colegas, servidores e serviços da instituição;\nVIII - organizar entidades estudantis e delas participar;\n[…]',
     tags:'direitos do aluno quais sao meus direitos contestar nota recorrer representar denunciar abuso entidade estudantil gremio igualdade respeito' },
 
-  { id:'disc-5', doc:'disciplinar', artigo:'Art. 5º', assunto:'Deveres do estudante', tipo:'literal',
+  { id:'disc-5', doc:'disciplinar', artigo:'Art. 5º', assunto:'Deveres do estudante', tema:'Punições e recursos', tipo:'literal',
     texto:'Constituem deveres do corpo discente do IFTO:\n[…]\nII - acatar as normas do Regimento Interno do IFTO, da ODP do curso, do Regulamento Disciplinar Discente, bem como dos demais documentos normativos internos, e as determinações da Reitoria, da Direção dos campi avançados, da Direção-Geral dos campi, dos coordenadores e tutores dos polos, e da Diretoria do Centro de Referência em Educação a Distância (CREAD) e de seus auxiliares;\nIII - tratar com respeito e urbanidade colegas, educadores, servidores e toda a comunidade do IFTO;\nIV - respeitar a etnia, raça, crença, gênero, sexualidade, convicções e autonomia de todos os servidores, colegas e comunidade, e valorizar as individualidades, sem praticar preconceito e discriminação de qualquer espécie;\n[…]\nVII - comparecer ao campus devidamente uniformizado, quando obrigatório, durante o seu período regular de estudo e em situações que assim exigir, portando documento de identificação exigido pela instituição;\n[…]\nX - frequentar, com assiduidade, pontualidade e interesse, as aulas, as solenidades e demais atividades;\n[…]\nXIII - aguardar o professor em sala de aula, por quinze minutos, não permanecendo nas áreas de circulação;\n[…]',
     tags:'deveres do aluno obrigacoes uniforme obrigatorio crachá identificacao esperar o professor quinze minutos assiduidade respeito' },
 
-  { id:'disc-7', doc:'disciplinar', artigo:'Art. 7º', assunto:'O que pesa na hora de aplicar a sanção', tipo:'literal',
+  { id:'disc-7', doc:'disciplinar', artigo:'Art. 7º', assunto:'O que pesa na hora de aplicar a sanção', tema:'Punições e recursos', tipo:'literal',
     texto:'No Regulamento Disciplinar Discente do IFTO, a aplicação das sanções disciplinares dar-se-á em conformidade com as seguintes condições:\nI - primariedade do autor da infração;\nII - culpa ou dolo;\nIII - gravidade da infração;\nIV - valor moral, cultural ou material atingido; e\nV - direito humano fundamental violado.',
     tags:'criterios da punicao primeira vez primariedade gravidade dolo culpa atenuante como decidem a pena' },
 
-  { id:'disc-8', doc:'disciplinar', artigo:'Art. 8º', assunto:'As quatro penalidades possíveis', tipo:'literal',
+  { id:'disc-8', doc:'disciplinar', artigo:'Art. 8º', assunto:'As quatro penalidades possíveis', tema:'Punições e recursos', tipo:'literal',
     texto:'Serão aplicadas, por meio de termo específico, ao estudante que cometer infrações disciplinares ou transgredir os preceitos deste Regulamento Disciplinar Discente, as seguintes penalidades:\nI - advertência verbal;\nII - advertência por escrito;\nIII - suspensão por tempo determinado; e\nIV - cancelamento de matrícula.\n[…]',
     tags:'quais sao as punicoes que posso levar lista das penalidades tipos de punicao advertencia verbal escrito suspensao cancelamento de matricula o que pode acontecer comigo castigo' },
 
-  { id:'disc-8-2', doc:'disciplinar', artigo:'Art. 8º, §§ 2º e 3º', assunto:'Reincidência: quando a punição sobe de nível', tipo:'literal',
+  { id:'disc-8-2', doc:'disciplinar', artigo:'Art. 8º, §§ 2º e 3º', assunto:'Reincidência: quando a punição sobe de nível', tema:'Punições e recursos', tipo:'literal',
     texto:'§ 2º A advertência por escrito é aplicada quando houver reincidência de atos que tenham levado à advertência verbal.\n§ 3º Caso ocorra o terceiro registro de uma infração sujeita à advertência por escrito, poderá levar à suspensão ou ao cancelamento de matrícula do estudante.',
     tags:'reincidencia terceira vez de novo repetir quantas vezes ate suspender agravamento' },
 
-  { id:'disc-8-4', doc:'disciplinar', artigo:'Art. 8º, § 4º', assunto:'Por quanto tempo a punição fica registrada', tipo:'literal',
+  { id:'disc-8-4', doc:'disciplinar', artigo:'Art. 8º, § 4º', assunto:'Por quanto tempo a punição fica registrada', tema:'Punições e recursos', tipo:'literal',
     texto:'§ 4º Os registros das penalidades aplicadas serão cancelados após transcorrerem os seguintes prazos:\nI - advertência verbal: um ano;\nII - advertência por escrito: dois anos;\nIII - suspensão: até a colação de grau; e\nIV - cancelamento da matrícula: até o ano subsequente.',
     tags:'quanto tempo fica registrado advertencia some apaga prazo registro ficha limpa um ano dois anos colacao de grau' },
 
-  { id:'disc-8-5', doc:'disciplinar', artigo:'Art. 8º, § 5º', assunto:'Quem pode aplicar cada penalidade', tipo:'literal',
+  { id:'disc-8-5', doc:'disciplinar', artigo:'Art. 8º, § 5º', assunto:'Quem pode aplicar cada penalidade', tema:'Punições e recursos', tipo:'literal',
     texto:'§ 5º São competentes para aplicação das penalidades:\nI - qualquer servidor ou coordenador ou tutor de polo deverá fazer o registro do ocorrido na Ficha de Ocorrência (Anexo I) e encaminhá-la à Coordenação do Curso para preenchimento do Termo de Advertência (Anexo II);\nII - Coordenação de Curso ou Gerência ou Diretoria de Ensino para os incisos I e II do § 4º do art. 8º;\nIII - Gerência de Ensino ou Diretoria de Ensino ou Diretoria do CREAD ou Direção de campus avançado ou Direção-Geral de campus após deliberação da Comissão ou Equipe Disciplinar Discente Local para o inciso III do § 4º do art. 8º; e\nIV - Direção de campus avançado ou Direção-Geral de campus ou Diretoria do CREAD após deliberação da Comissão ou Equipe Disciplinar Discente Local para o inciso IV do § 4º do art. 8º.',
     tags:'quem aplica a punicao quem pode me advertir professor pode suspender coordenador diretor competencia ficha de ocorrencia' },
 
-  { id:'disc-9', doc:'disciplinar', artigo:'Art. 9º', assunto:'Direito de defesa', tipo:'literal',
+  { id:'disc-9', doc:'disciplinar', artigo:'Art. 9º', assunto:'Direito de defesa', tema:'Punições e recursos', tipo:'literal',
     texto:'A aplicação das medidas disciplinares deverá levar em consideração, na qualidade de instrumento da prática educativa, a garantia do amplo direito de defesa aos envolvidos no caso.',
     tags:'direito de defesa me defender ampla defesa contraditorio posso explicar meu lado' },
 
-  { id:'disc-11-i', doc:'disciplinar', artigo:'Art. 11, I', assunto:'O que dá advertência verbal', tipo:'literal',
+  { id:'disc-11-i', doc:'disciplinar', artigo:'Art. 11, I', assunto:'O que dá advertência verbal', tema:'Punições e recursos', tipo:'literal',
     texto:'Serão consideradas infrações disciplinares passíveis de aplicação de penalidades os seguintes comportamentos:\nI - para a advertência verbal:\na) ausentar-se da sala de aula ou da instituição sem comunicar ao professor ou coordenador ou tutor de polo quando em encontros presenciais;\nb) alimentar-se em sala de aula, sala de multimeios, sala de projeções, laboratórios, auditórios ou piscinas, salvo com anuência do professor ou coordenador ou tutor de polo;\nc) permanecer, sem autorização do professor ou coordenador ou tutor de polo, em sala de aula, sala de multimeios, laboratório, auditório ou sala de projeções após o término das atividades escolares ou o término das atividades presenciais;\nd) permanecer em quadras, piscinas e demais espaços destinados às práticas esportivas fora das atividades de Educação Física, quando não autorizado pela Gerência ou Diretoria de Ensino ou Coordenação de Área ou de Curso;\ne) provocar ou participar de atividades que comprometam a disciplina nas dependências da instituição ou do polo, especialmente nos locais destinados a aulas e a outras atividades curriculares;\nf) manter-se fora da sala no período em que estiver sendo ministrada aula; e\ng) usar códigos e linguagem impróprios e praticar atos que não estejam de acordo com os princípios da ética, da dignidade, do decoro, do zelo e da consciência dos princípios morais.\n[…]',
     tags:'advertencia verbal infracao de menor gravidade comer em sala sair de sala matar aula andar no corredor bagunca conversa' },
 
-  { id:'disc-11-ii', doc:'disciplinar', artigo:'Art. 11, II', assunto:'O que dá advertência por escrito', tipo:'literal',
+  { id:'disc-11-ii', doc:'disciplinar', artigo:'Art. 11, II', assunto:'O que dá advertência por escrito', tema:'Punições e recursos', tipo:'literal',
     texto:'Serão consideradas infrações disciplinares passíveis de aplicação de penalidades os seguintes comportamentos:\n[…]\nII - para a advertência por escrito:\n[…]\nc) desrespeitar, ofender, provocar com palavras, atos ou gestos colegas, professores, técnicos administrativos, colaboradores ou qualquer outra pessoa nas dependências da instituição ou do polo;\n[…]\ne) aplicar trotes que agridam a integridade física e/ou psicológica de estudantes novatos ou veteranos e que não estejam previamente acordados com a Coordenação do Curso ou do Polo;\nf) apresentar-se na instituição ou no polo ou representá-la alcoolizado ou sob efeito de qualquer substância tóxica;\ng) danificar, furtar ou subtrair objetos pertencentes a outrem ou à instituição;\n[…]\ni) utilizar-se de quaisquer meios fraudulentos, como falsificar assinatura de professor ou nota de prova, cometer plágio, físico ou virtual, para obter resultados favoráveis nas avaliações;\n[…]\nl) fumar, no pátio e nas dependências da instituição e do polo, cigarros ou narguilé eletrônico (Lei nº 9.294, de 15 de julho de 1996);\nm) utilizar telefone celular, smartphone, tablet, gravadores de imagem e/ou áudio ou outros aparelhos eletrônicos similares sem prévia autorização;\nn) fotografar, filmar ou gravar áudio de qualquer atividade didática sem autorização expressa do professor;\n[…]',
     tags:'advertencia por escrito cola colar na prova plagio posso usar celular em sala de aula smartphone tablet filmar gravar o professor trote fumar narguile vandalismo furto desrespeito ofensa colei fraude fraudar avaliacao verificacao de aprendizagem' },
 
-  { id:'disc-11-iii', doc:'disciplinar', artigo:'Art. 11, III', assunto:'O que dá suspensão', tipo:'literal',
+  { id:'disc-11-iii', doc:'disciplinar', artigo:'Art. 11, III', assunto:'O que dá suspensão', tema:'Punições e recursos', tipo:'literal',
     texto:'Serão consideradas infrações disciplinares passíveis de aplicação de penalidades os seguintes comportamentos:\n[…]\nIII - para suspensão assistida dentro da instituição por até três dias úteis:\na) praticar qualquer ação que implique em constrangimento recorrente a outros estudantes que se configure como bullying, presencial ou virtual, prática de injúria racial, racismo, preconceito, discriminação ou qualquer outro tipo de ação;\nb) desrespeitar, ofender, provocar com palavras, atos ou gestos colegas, professores, técnicos administrativos, colaboradores, demais servidores ou qualquer outra pessoa nas dependências da instituição ou em encontros virtuais; e\nc) apresentar-se na instituição ou no polo sob efeito de entorpecentes ou similares como cocaína, maconha, crack, heroína ou qualquer uma substância psicoativa.\n[…]',
     tags:'suspensao o que da suspensao quantos dias tres dias uteis bullying racismo preconceito discriminacao droga suspensao assistida' },
 
-  { id:'disc-11-iv', doc:'disciplinar', artigo:'Art. 11, IV', assunto:'O que dá cancelamento de matrícula', tipo:'literal',
+  { id:'disc-11-iv', doc:'disciplinar', artigo:'Art. 11, IV', assunto:'O que dá cancelamento de matrícula', tema:'Punições e recursos', tipo:'literal',
     texto:'Serão consideradas infrações disciplinares passíveis de aplicação de penalidades os seguintes comportamentos:\n[…]\nIV - para o cancelamento da matrícula:\na) agredir fisicamente qualquer pessoa nas dependências do campus/campus avançado/polo do IFTO, exceto no caso de legítima defesa;\nb) praticar delitos sujeitos à ação penal;\nc) participar de atos que possam caracterizar-se como calúnia, injúria ou difamação ao IFTO, a estudantes ou a qualquer membro de sua comunidade;\n[…]\ne) praticar tráfico de entorpecentes;\nf) trazer, guardar, oferecer ou fornecer, no campus/campus avançado/polo, bebidas alcoólicas, qualquer substância tóxica ou psicotrópica, armas e materiais inflamáveis, explosivos de qualquer natureza ou qualquer elemento que represente perigo para si e para a comunidade escolar;\ng) praticar qualquer ação ou omissão baseada no gênero, independente de o estudante se identificar com algum, que lhe cause estudante lesão, sofrimento físico, psicológico e dano moral;\n[…]\ni) praticar violência psicológica, entendida como qualquer conduta que cause dano emocional e diminuição da autoestima;\n[…]',
     tags:'briga brigar dar soco agressao fisica expulsao expulso cancelamento da matricula por infracao trafico arma crime violencia infracao gravissima' },
 
-  { id:'disc-18', doc:'disciplinar', artigo:'Art. 18', assunto:'Como o processo tramita', tipo:'literal',
+  { id:'disc-18', doc:'disciplinar', artigo:'Art. 18', assunto:'Como o processo tramita', tema:'Punições e recursos', tipo:'literal',
     texto:'Após a apuração dos fatos, a Comissão/Equipe Disciplinar Discente Local emitirá parecer e enviará à Gerência/Diretoria de Ensino ou setor equivalente, que encaminhará ao diretor-geral/diretor do campus/campus avançado ou à Diretoria do CREAD, para a aplicação da medida disciplinar cabível.\nParágrafo único. Quando o ato estiver capitulado na Lei Penal, será remetida cópia com autenticação administrativa dos autos à autoridade competente pelo diretor-geral/diretor do campus/campus avançado ou pela Diretoria do CREAD.',
     tags:'como funciona o processo disciplinar tramite comissao parecer quem decide policia lei penal apuracao' },
 
-  { id:'disc-19', doc:'disciplinar', artigo:'Art. 19', assunto:'A punição não vai para o histórico escolar', tipo:'literal',
+  { id:'disc-19', doc:'disciplinar', artigo:'Art. 19', assunto:'A punição não vai para o histórico escolar', tema:'Punições e recursos', tipo:'literal',
     texto:'O registro das penalidades aplicadas a membro do corpo discente será feito por meio do Termo de Advertência (Anexo II) nas situações dispostas no art. 8º, incisos I e II; e nos casos do art. 8º, incisos III e IV, por meio do Relatório Final de Procedimento Disciplinar Discente Local (Anexo VI), arquivado na pasta do discente, não devendo constar no histórico escolar.',
     tags:'vai para o historico escolar advertencia aparece no historico mancha ficha registro pasta do aluno prejudica' },
 
-  { id:'disc-20', doc:'disciplinar', artigo:'Art. 20', assunto:'Depois do cancelamento, quando dá para voltar', tipo:'literal',
+  { id:'disc-20', doc:'disciplinar', artigo:'Art. 20', assunto:'Depois do cancelamento, quando dá para voltar', tema:'Punições e recursos', tipo:'literal',
     texto:'Obedecendo ao devido processo, o cancelamento da matrícula implicará o impedimento de nova matrícula no ano subsequente, mesmo que o discente seja aprovado em processo seletivo posterior ao ato infracional, conforme indicado pela Comissão /Equipe Disciplinar Discente Local e ratificado pelo diretor-geral/diretor do campus/campus avançado ou pela Diretoria do CREAD.',
     tags:'voltar depois de expulso nova matricula ano seguinte impedimento processo seletivo readmissao' },
 
-  { id:'disc-22', doc:'disciplinar', artigo:'Art. 22', assunto:'Prazo para recorrer da punição', tipo:'literal',
+  { id:'disc-22', doc:'disciplinar', artigo:'Art. 22', assunto:'Prazo para recorrer da punição', tema:'Punições e recursos', tipo:'literal',
     texto:'O estudante terá direito a recurso (Anexo IV), no prazo de até três dias úteis, a contar da publicação da decisão da Comissão/Equipe Disciplinar Discente Local.',
     tags:'recurso recorrer da punicao levei uma advertencia e agora fui advertido fui suspenso prazo tres dias uteis como contestar discordo da decisao o que fazer' },
 
-  { id:'disc-23', doc:'disciplinar', artigo:'Art. 23', assunto:'Prazo de resposta ao recurso', tipo:'literal',
+  { id:'disc-23', doc:'disciplinar', artigo:'Art. 23', assunto:'Prazo de resposta ao recurso', tema:'Punições e recursos', tipo:'literal',
     texto:'A Comissão/Equipe Disciplinar Discente Local terá até três dias úteis para resposta ao recurso impetrado pelo discente.',
     tags:'quanto tempo demora a resposta do recurso prazo da comissao tres dias uteis' },
 
-  { id:'doc-5', doc:'docente', artigo:'Art. 5º', assunto:'Os regimes de trabalho do docente', tipo:'literal',
+  { id:'doc-5', doc:'docente', artigo:'Art. 5º', assunto:'Os regimes de trabalho do docente', tema:'Trabalho docente', tipo:'literal',
     texto:'Ao docente do IFTO ocupante de cargo efetivo será aplicado um dos seguintes regimes de trabalho:\nI - tempo integral de 40 (quarenta) horas semanais de trabalho, com dedicação exclusiva às atividades de ensino, pesquisa, extensão e gestão institucional;\nII - tempo parcial de 20 (vinte) horas semanais de trabalho.\n§ 1º Excepcionalmente, poderá ser admitida a adoção do regime de 40 (quarenta) horas semanais de trabalho, em tempo integral, observando 2 (dois) turnos diários completos, sem dedicação exclusiva, para áreas com características específicas.\n[…]',
     tags:'regime de trabalho do professor 40 horas 20 horas dedicacao exclusiva tempo integral tempo parcial jornada docente' },
 
-  { id:'doc-5-3', doc:'docente', artigo:'Art. 5º, § 3º', assunto:'O que a dedicação exclusiva impede', tipo:'literal',
+  { id:'doc-5-3', doc:'docente', artigo:'Art. 5º, § 3º', assunto:'O que a dedicação exclusiva impede', tema:'Trabalho docente', tipo:'literal',
     texto:'§ 3º O regime de 40 (quarenta) horas com dedicação exclusiva implica o impedimento do exercício de outra atividade remunerada, pública ou privada, com as exceções previstas em Lei.',
     tags:'dedicacao exclusiva posso dar aula fora trabalhar em outro lugar outra renda impedimento DE' },
 
-  { id:'doc-11', doc:'docente', artigo:'Art. 11', assunto:'Como se muda de regime de trabalho', tipo:'literal',
+  { id:'doc-11', doc:'docente', artigo:'Art. 11', assunto:'Como se muda de regime de trabalho', tema:'Trabalho docente', tipo:'literal',
     texto:'As alterações dos regimes de trabalho do docente ocorrerão mediante publicação de edital específico para este fim.\n[…]\n§ 2º A condução do edital de que trata o caput será de responsabilidade da Comissão Permanente de Pessoal Docente Local – CPPD da unidade, que fará a análise e o parecer das solicitações.\n[…]\n§ 4º A alteração de regime de trabalho somente poderá ser concedida desde que não ultrapasse o total do banco de professor-equivalente direcionado a professores efetivos da unidade.\n[…]',
     tags:'mudar de regime passar para 40 horas pedir dedicacao exclusiva edital cppd banco de professor equivalente' },
 
-  { id:'doc-14', doc:'docente', artigo:'Art. 14', assunto:'Pontuação mínima para conseguir dedicação exclusiva', tipo:'literal',
+  { id:'doc-14', doc:'docente', artigo:'Art. 14', assunto:'Pontuação mínima para conseguir dedicação exclusiva', tema:'Trabalho docente', tipo:'literal',
     texto:'Está vedada ao docente a alteração do regime de trabalho para tempo integral com Dedicação Exclusiva quando o resultado da soma das pontuações previstas nas alíneas “a”, “b” e “c” do art. 12 for inferior a 200 (duzentos) pontos.',
     tags:'pontuacao minima dedicacao exclusiva 200 pontos nao consegui mudar regime vedada alteracao' },
 
-  { id:'doc-16', doc:'docente', artigo:'Art. 16', assunto:'Limite de professores em tempo parcial', tipo:'literal',
+  { id:'doc-16', doc:'docente', artigo:'Art. 16', assunto:'Limite de professores em tempo parcial', tema:'Trabalho docente', tipo:'literal',
     texto:'A alteração de regime de trabalho de tempo integral com Dedicação Exclusiva ou tempo integral sem Dedicação Exclusiva para tempo parcial observará:\nI - o limite máximo de 20% (vinte por cento) do total do quadro de docentes efetivos no campus em regime de trabalho de tempo parcial;\nII - o parecer de viabilidade elaborado exclusivamente pelo diretor/gerente de ensino da unidade.\n[…]',
     tags:'passar para 20 horas tempo parcial limite 20 por cento quadro do campus reduzir jornada' },
 
-  { id:'doc-18', doc:'docente', artigo:'Art. 18', assunto:'Atividades gerais do docente', tipo:'literal',
+  { id:'doc-18', doc:'docente', artigo:'Art. 18', assunto:'Atividades gerais do docente', tema:'Trabalho docente', tipo:'literal',
     texto:'São atividades gerais do docente:\nI - participar da elaboração da proposta pedagógica do IFTO e da unidade a que está vinculado;\nII - elaborar e cumprir o Plano Individual de Trabalho – PIT, em conformidade com este regulamento;\nIII - zelar pela aprendizagem dos estudantes;\nIV - estabelecer estratégias de recuperação para os alunos de menor rendimento;\nV - cumprir os dias letivos e ministrar as horas-aula estabelecidas, além de participar integralmente dos períodos dedicados ao planejamento, à avaliação e ao desenvolvimento do estudante;\n[…]',
     tags:'obrigacoes do professor atribuicoes deveres docente recuperacao planejamento dias letivos' },
 
-  { id:'doc-21', doc:'docente', artigo:'Art. 21', assunto:'Prazo de entrega do PIT', tipo:'literal',
+  { id:'doc-21', doc:'docente', artigo:'Art. 21', assunto:'Prazo de entrega do PIT', tema:'Trabalho docente', tipo:'literal',
     texto:'O Plano Individual de Trabalho deverá ser elaborado no início de cada semestre letivo e protocolizado na chefia imediata em até quinze dias corridos após o início do semestre letivo.\n§ 1º Havendo alteração definitiva ou com prazo superior a 20 (vinte) dias das atividades registradas no Plano Individual de Trabalho, o docente deverá encaminhar, via SEI, para a chefia imediata, em até 15 (quinze) dias corridos, versão atualizada do documento, gerando versão retificadora.\n[…]',
     tags:'pit plano individual de trabalho prazo quinze dias entregar retificar sei chefia imediata' },
 
-  { id:'doc-24', doc:'docente', artigo:'Art. 24, § 2º', assunto:'Limite de aulas para quem está no mestrado ou doutorado', tipo:'literal',
+  { id:'doc-24', doc:'docente', artigo:'Art. 24, § 2º', assunto:'Limite de aulas para quem está no mestrado ou doutorado', tema:'Trabalho docente', tipo:'literal',
     texto:'§ 2º Docentes credenciados em programas stricto sensu (mestrado ou doutorado) oferecidos pelo IFTO terão carga horária semanal de, no máximo, 12 (doze) aulas, incluídas as horas-aula do programa.',
     tags:'stricto sensu mestrado doutorado limite de aulas doze aulas credenciado programa pos graduacao' },
 
-  { id:'doc-25', doc:'docente', artigo:'Art. 25, parágrafo único', assunto:'Quanto vale uma hora-aula', tipo:'literal',
+  { id:'doc-25', doc:'docente', artigo:'Art. 25, parágrafo único', assunto:'Quanto vale uma hora-aula', tema:'Trabalho docente', tipo:'literal',
     texto:'Parágrafo único. Considerando condições de deslocamento dentro das unidades do IFTO e ambientação de docentes e discentes no espaço escolar/acadêmico, computar-se-á 60 (sessenta) minutos – 1 (uma) hora – de trabalho como equivalente a uma hora-aula para fins de jornada de trabalho do docente.',
     tags:'hora aula quanto vale sessenta minutos uma hora equivalencia jornada' },
 
-  { id:'doc-27', doc:'docente', artigo:'Art. 27', assunto:'Mínimo e máximo de aulas por semana', tipo:'literal',
+  { id:'doc-27', doc:'docente', artigo:'Art. 27', assunto:'Mínimo e máximo de aulas por semana', tema:'Trabalho docente', tipo:'literal',
     texto:'Para fins de atribuição dos valores previstos no campo Aulas, Apêndice A, observar-se-ão:\nI - o docente com regime de trabalho de 20 (vinte) horas semanais deverá cumprir a carga horária mínima de 8 (oito) e máxima de 12 (doze) horas semanais com aulas;\nII - o docente com regime de trabalho de 40 (quarenta) horas semanais, sem Dedicação Exclusiva, deverá cumprir a carga horária mínima de 10 (dez) e máxima de 20 (vinte) horas semanais com aulas; e\nIII - o docente com regime de trabalho de 40 (quarenta) horas semanais, com Dedicação Exclusiva, deverá cumprir a carga horária mínima de 10 (dez) e máxima de 20 (vinte) horas semanais com aulas.\n[…]',
     tags:'quantas aulas por semana carga horaria minima maxima de aula limite de aulas 20 horas 40 horas quantas aulas devo dar' },
 
-  { id:'doc-34', doc:'docente', artigo:'Art. 34', assunto:'O que conta como apoio ao ensino', tipo:'literal',
+  { id:'doc-34', doc:'docente', artigo:'Art. 34', assunto:'O que conta como apoio ao ensino', tema:'Trabalho docente', tipo:'literal',
     texto:'Serão consideradas atividades de apoio ao ensino as ações do docente diretamente vinculadas às matrizes curriculares e programas dos cursos regulares autorizados do IFTO, compreendendo:\nI - atendimento ao estudante (conforme quantitativos definidos nas Tabelas 1 e 2 do Apêndice A);\nII - orientação de Trabalho de Conclusão de Curso – TCC em curso técnico (até duas horas por orientando);\nIII - orientação de TCC em curso de graduação (até duas horas por orientando);\nIV - orientação de TCC em curso de pós-graduação (até três horas por orientando);\n[…]\nVI - orientação de estágio curricular supervisionado (até uma hora por orientando);\n[…]\nIX - coordenação de projeto de ensino (até oito horas por projeto);\n[…]\nXI - tutoria presencial (até uma hora para cada cinquenta estudantes);\n[…]',
     tags:'orientar tcc quantas horas por orientando estagio projeto de ensino tutoria atendimento ao aluno apoio ao ensino' },
 
-  { id:'doc-42', doc:'docente', artigo:'Art. 42', assunto:'Horas das funções administrativas', tipo:'literal',
+  { id:'doc-42', doc:'docente', artigo:'Art. 42', assunto:'Horas das funções administrativas', tema:'Trabalho docente', tipo:'literal',
     texto:'Serão consideradas Atividades de Administrativas aquelas desenvolvidas em caráter temporário ou permanente no âmbito IFTO vinculadas diretamente a cargos comissionados; funções gratificadas; funções não gratificadas ou comissões não gratificadas, compreendendo, mas não se limitando a:\nI - Direção-Geral de campus (até quarenta horas semanais);\n[…]\nIII - Gerência/Direção de Ensino (até vinte e duas horas semanais);\nIV - Coordenação de Curso de Nível Médio: Técnico Integrado, Técnico Subsequente, Técnico Concomitante, Proeja ou FIC (até vinte horas semanais);\n[…]\nVI - Coordenação de Área de Conhecimento/Eixo Tecnológico (até doze horas semanais);\n[…]\nVIII - Responsabilidade Técnica por Laboratório (até oito horas semanais);\n[…]\nXIII - Coordenação do Núcleo de Atendimento de Pessoas com Necessidades Específicas – NAPNE (até quatro horas semanais);\n[…]',
     tags:'coordenacao de curso quantas horas funcao administrativa direcao gerencia napne laboratorio carga horaria de gestao' },
 
-  { id:'doc-49', doc:'docente', artigo:'Arts. 47, 49 e 50', assunto:'RESAD, o relatório semestral', tipo:'literal',
+  { id:'doc-49', doc:'docente', artigo:'Arts. 47, 49 e 50', assunto:'RESAD, o relatório semestral', tema:'Trabalho docente', tipo:'literal',
     texto:'As atividades de capacitação deverão ser apresentadas por meio do Relatório Semestral de Atividades Desenvolvidas – RESAD.\nParágrafo único. A não apresentação do RESAD, dentro dos prazos determinados, tornará o professor inadimplente.\nArt. 49. O relatório de atividades desenvolvidas deverá ser apresentado, obrigatoriamente, em caráter semestral.\n[…]\nArt. 50. O relatório de atividades desenvolvidas, devidamente preenchido, deverá ser entregue, via Sistema Informatizado, à chefia imediata, na data do início do semestre letivo subsequente.\n[…]',
     tags:'resad relatorio semestral de atividades prazo entrega inadimplente capacitacao' }
 ];

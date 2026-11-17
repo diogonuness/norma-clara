@@ -92,6 +92,16 @@ O pipeline reproduz, em JavaScript puro, a arquitetura proposta para o MVP final
 9. **Abstenção.** Se o melhor trecho não cobrir termos temáticos suficientes da
    pergunta, o sistema responde que não sabe e indica a secretaria.
 
+A abstenção vem com saída. Abaixo da frase, "Posso ajudar com estes assuntos:"
+mostra um chip por tema que a base cobre: o campo `tema` de cada artigo, com a
+pergunta-exemplo de `TEMAS` em `normas.js`. O clique envia essa pergunta. Quando
+a busca ficou perto de responder, aparece também "Talvez você queira saber
+sobre:" com o assunto do artigo mais próximo, que abre o card dele. "Perto" é
+estrito: o mesmo artigo ficou em 1º lugar nos dois braços da busca e faltou um
+só termo de cobertura. Com um critério frouxo, "horário da biblioteca"
+sugeriria "Onde acontece a recuperação". `node testes.js` confere que todo
+artigo tem tema e que cada pergunta-exemplo traz um artigo do próprio tema.
+
 `buscar()` continua devolvendo os dois rankings, a pontuação RRF e a do
 reranking, para quem quiser inspecionar o pipeline no console.
 

@@ -30,7 +30,7 @@ function carregarMotor() {
     throw new Error('Não achei o separador da interface em app.js. ' +
       'Se o comentário mudou, ajuste SEPARADOR aqui.');
   }
-  const fonte = normas + '\n' + app.slice(0, corte) + '\n; return { buscar, NORMAS, DOCUMENTOS };';
+  const fonte = normas + '\n' + app.slice(0, corte) + '\n; return { buscar, NORMAS, DOCUMENTOS, TEMAS };';
   return new Function(fonte)();
 }
 
@@ -134,7 +134,7 @@ function rodar() {
 }
 
 function integridade() {
-  const { NORMAS, DOCUMENTOS } = carregarMotor();
+  const { NORMAS, DOCUMENTOS, TEMAS, buscar } = carregarMotor();
   const normas = fs.readFileSync(path.join(__dirname, 'normas.js'), 'utf8');
   const { EXPLICACOES } = new Function(normas + '; return { EXPLICACOES };')();
   const ids = NORMAS.map(n => n.id);
@@ -150,6 +150,18 @@ function integridade() {
     .forEach(n => problemas.push(`artigo com campo vazio: ${n.id}`));
   Object.entries(DOCUMENTOS).filter(([, d]) => d.link.includes('/view'))
     .forEach(([k]) => problemas.push(`link com /view, não entrega o PDF direto: ${k}`));
+
+  // Temas: todo artigo tem um, e a pergunta-exemplo de cada tema (usada nos
+  // chips da abstenção) precisa trazer um artigo do próprio tema.
+  NORMAS.filter(n => !TEMAS[n.tema])
+    .forEach(n => problemas.push(`artigo sem tema conhecido: ${n.id} (${n.tema})`));
+  for (const [tema, pergunta] of Object.entries(TEMAS)) {
+    const r = buscar(pergunta, false);
+    const veio = r.confiante && r.resultados.length ? NORMAS[r.resultados[0].i] : null;
+    if (!veio || veio.tema !== tema) {
+      problemas.push(`pergunta-exemplo do tema "${tema}" não traz artigo do tema: "${pergunta}" → ${veio ? veio.id : 'abstenção'}`);
+    }
+  }
 
   const vigentes = NORMAS.filter(n => DOCUMENTOS[n.doc].situacao === 'vigente').length;
   const docs = Object.values(DOCUMENTOS).filter(d => d.situacao === 'vigente').length;
