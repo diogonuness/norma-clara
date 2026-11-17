@@ -204,6 +204,28 @@ function buscar(pergunta, incluirRevogadas) {
            base: brutos, extras: expandidos.filter(t => !brutos.includes(t)) };
 }
 
+/* ---------- outros artigos relacionados ----------
+   Fica no motor (e não na interface) para testes.js medir com a mesma regra.
+   Recebe o resultado de buscar() e devolve até 3 índices de NORMAS:
+   - vigentes (o filtro já vem de buscar), sem o próprio artigo da resposta;
+   - do mesmo tema da resposta, com pontuação >= 30% da do primeiro
+     (reranking quando houve, senão RRF);
+   - se nenhum passar no corte, até 2 seguintes do mesmo tema que cubram
+     algum termo da pergunta (cobertura > 0).
+   O tema é o que impede artigo sem relação: as pontuações ficam todas perto
+   do topo, e sem ele "Faltei na prova" listava "O que dá advertência por
+   escrito" (o artigo fala em "nota de prova"). */
+function relacionados(r) {
+  const nota = x => (x.rerank != null ? x.rerank : x.rrf);
+  const [topo, ...resto] = r.resultados || [];
+  if (!topo) return [];
+  const tema = NORMAS[topo.i].tema;
+  const doTema = x => x.i !== topo.i && NORMAS[x.i].tema === tema;
+  const acima = resto.filter(x => doTema(x) && nota(x) >= 0.3 * nota(topo)).slice(0, 3);
+  if (acima.length) return acima.map(x => x.i);
+  return resto.filter(x => doTema(x) && (x.cobertura || 0) > 0).slice(0, 2).map(x => x.i);
+}
+
 /* ---------- interface ---------- */
 /* Interface do Norma Clara igual ao vídeo de demonstração.
    O microfone ouve de verdade (Web Speech API, pt-BR) e a resposta vem do
@@ -792,22 +814,6 @@ async function responderPergunta(texto) {
   if (!resposta) { mostrarAbstencao(r); return; }
   resposta.relacionados = relacionados(r);
   await mostrarResposta(resposta, g);
-}
-
-/* Outros resultados da mesma busca que valem a pena mostrar: vigentes (o
-   filtro de vigência já vem de buscar), com pontuação de pelo menos metade
-   da do primeiro (reranking quando houve, senão RRF) e do mesmo tema da
-   resposta. As pontuações ficam todas perto do topo, então só os 50% não
-   filtravam nada: "Perdi a prova" trazia "O que dá advertência por escrito"
-   porque o artigo fala em "nota de prova". */
-function relacionados(r) {
-  const nota = x => (x.rerank != null ? x.rerank : x.rrf);
-  const [topo, ...resto] = r.resultados;
-  if (!topo) return [];
-  const tema = NORMAS[topo.i].tema;
-  return resto
-    .filter(x => nota(x) >= 0.5 * nota(topo) && NORMAS[x.i].tema === tema)
-    .slice(0, 3).map(x => x.i);
 }
 
 function esperarFimDaResposta() {

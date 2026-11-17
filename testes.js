@@ -30,7 +30,7 @@ function carregarMotor() {
     throw new Error('Não achei o separador da interface em app.js. ' +
       'Se o comentário mudou, ajuste SEPARADOR aqui.');
   }
-  const fonte = normas + '\n' + app.slice(0, corte) + '\n; return { buscar, NORMAS, DOCUMENTOS, TEMAS };';
+  const fonte = normas + '\n' + app.slice(0, corte) + '\n; return { buscar, relacionados, NORMAS, DOCUMENTOS, TEMAS };';
   return new Function(fonte)();
 }
 
@@ -184,5 +184,28 @@ function integridade() {
   return problemas.length === 0;
 }
 
+/* Em quantas respostas o bloco "Outros artigos relacionados" teria itens.
+   Meta: pelo menos metade das perguntas-gabarito. */
+function relacionadosNasRespostas() {
+  const { buscar, relacionados, NORMAS } = carregarMotor();
+  let respostas = 0, comBloco = 0;
+  for (const [pergunta] of CASOS) {
+    const r = buscar(pergunta, false);
+    if (!r.confiante || !r.resultados.length) continue;
+    respostas++;
+    const lista = relacionados(r);
+    if (lista.some(i => i === r.resultados[0].i || NORMAS[i].tema !== NORMAS[r.resultados[0].i].tema)) {
+      console.log(`  relacionado fora do tema ou repetido em "${pergunta}"`);
+      process.exitCode = 1;
+    }
+    if (lista.length) comBloco++;
+  }
+  const meta = Math.ceil(CASOS.length / 2);
+  console.log(`Relacionados: o bloco aparece em ${comBloco} de ${respostas} respostas ` +
+    `(${comBloco}/${CASOS.length} perguntas; meta: ${meta}).`);
+  if (comBloco < meta) process.exitCode = 1;
+}
+
 integridade();
 rodar();
+relacionadosNasRespostas();
