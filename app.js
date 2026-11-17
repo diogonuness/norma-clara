@@ -205,27 +205,77 @@ function buscar(pergunta, incluirRevogadas) {
 }
 
 /* ---------- interface ---------- */
+/* Interface do Norma Clara igual ao vídeo de demonstração.
+   O microfone ouve de verdade (Web Speech API, pt-BR) e a resposta vem do
+   motor de busca acima. ?demo=0 só tira o selo "Demonstração" do cabeçalho. */
+(() => {
+'use strict';
+
+const PARAMS = new URLSearchParams(location.search);
+const MODO_DEMO = PARAMS.get('demo') !== '0' && PARAMS.get('real') !== '1';
+const reduzirMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* PDFs disponíveis localmente (pasta normativas/), por documento */
+const PDF_LOCAIS = {
+  disciplinar: 'normativas/01-recorte-do-professor/Regulamento Disciplinar Discente (Res 197-2023).pdf'
+};
+
+/* ---------- elementos ---------- */
+const $hero = document.getElementById('hero');
 const $conversa = document.getElementById('conversa');
-const $revogadas = document.getElementById('incluir-revogadas');
-const reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $mic = document.getElementById('btn-mic');
+const $campo = document.getElementById('campo');
+const $campoCaixa = $campo.parentElement;
+const $lixeira = document.getElementById('btn-lixeira');
+const $enviar = document.getElementById('btn-enviar');
+const $ajuda = document.getElementById('ajuda');
+const $rodape = document.getElementById('rodape');
+const $seloDemo = document.getElementById('selo-demo');
+const $reiniciar = document.getElementById('btn-reiniciar');
+const $anuncio = document.getElementById('anuncio');
 
-/* Explicação em linguagem simples. Com CONFIG_IA.endpoint definido, o trecho
-   do artigo é enviado ao modelo por POST { pergunta, documento, artigo, texto }
-   e a resposta esperada é { explicacao }. Sem endpoint, usa as explicações
-   pré-geradas de EXPLICACOES (normas.js). */
-const CONFIG_IA = { endpoint: null };
+const PLACEHOLDERS = {
+  idle: 'Clique no microfone para fazer sua pergunta.',
+  listening: 'Pode falar...',
+  review: '',
+  answering: 'Sua resposta está chegando...',
+  done: 'Faça outra pergunta...'
+};
+const AJUDA_PADRAO = 'Pergunte com suas palavras. A resposta vem com a fonte.';
+const AJUDAS = {
+  idle: AJUDA_PADRAO,
+  listening: 'Ouvindo sua pergunta...',
+  review: 'Tudo certo? Clique em Perguntar para continuar.',
+  done: AJUDA_PADRAO
+};
 
-async function explicar(indice, pergunta) {
-  const n = NORMAS[indice];
-  if (!CONFIG_IA.endpoint) return EXPLICACOES[n.id] || null;
-  const resp = await fetch(CONFIG_IA.endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pergunta, documento: DOCUMENTOS[n.doc].nome, artigo: n.artigo, texto: n.texto })
-  });
-  if (!resp.ok) throw new Error('HTTP ' + resp.status);
-  return (await resp.json()).explicacao || null;
+let estado = 'idle';
+let temConversa = false;
+let geracao = 0; // cancela digitações e roteiros pendentes ao reiniciar
+
+function definirEstado(novo, ajuda) {
+  estado = novo;
+  document.body.dataset.estado = novo;
+  if (novo !== 'review') $campo.placeholder = PLACEHOLDERS[novo] || '';
+  $ajuda.textContent = ajuda != null ? ajuda : (AJUDAS[novo] || AJUDA_PADRAO);
+
+  const podeEnviar = novo === 'review';
+  $enviar.disabled = !podeEnviar;
+  $enviar.setAttribute('aria-disabled', String(!podeEnviar));
+  $enviar.classList.toggle('composer__enviar--ativo', podeEnviar);
+
+  $mic.disabled = micIndisponivel || novo === 'answering';
+
+  const comLixeira = novo === 'review';
+  $lixeira.hidden = !comLixeira;
+  $campoCaixa.classList.toggle('composer__campo--com-lixeira', comLixeira);
+
+  $campo.disabled = novo === 'answering';
+  autoCrescer();
 }
+
+/* ---------- utilidades ---------- */
+const esperar = ms => new Promise(r => setTimeout(r, ms));
 
 function el(tag, cls, txt) {
   const e = document.createElement(tag);
@@ -234,339 +284,402 @@ function el(tag, cls, txt) {
   return e;
 }
 
-function linkPdf(d, cls, rotulo, baixar) {
-  const a = el('a', cls, rotulo);
-  a.href = d.link; a.target = '_blank'; a.rel = 'noopener';
-  // "download" só é respeitado na mesma origem; para o portal do IFTO o
-  // navegador abre o PDF, de onde ele pode ser salvo.
-  if (baixar) a.setAttribute('download', '');
-  return a;
+function entrar(elemento) {
+  /* entrada com fade + translateY via transição (interrompível) */
+  elemento.setAttribute('data-entrando', '');
+  requestAnimationFrame(() => requestAnimationFrame(() => elemento.removeAttribute('data-entrando')));
 }
 
-/* Ordem fixa do cartão: normativa + PDF, artigo, texto do artigo, explicação.
-   A explicação só existe depois do texto e nunca o substitui. */
-function cartaoNorma(indice, opcoes = {}) {
-  const n = NORMAS[indice], d = DOCUMENTOS[n.doc];
-  const card = el('article', 'norma' + (opcoes.principal ? ' norma--principal' : ''));
-
-  const cabecalho = el('header', 'norma__cabecalho');
-  const linhaDoc = el('div', 'norma__linha-doc');
-  linhaDoc.append(el('h3', 'norma__nome', d.nome));
-  const abrir = linkPdf(d, 'norma__pdf', 'Abrir PDF');
-  abrir.setAttribute('aria-label', 'Abrir o PDF de ' + d.nome);
-  linhaDoc.append(abrir);
-  cabecalho.append(linhaDoc);
-
-  const linhaArt = el('p', 'norma__linha-artigo');
-  linhaArt.append(el('span', 'norma__artigo', n.artigo), el('span', 'norma__assunto', n.assunto));
-  linhaArt.append(n.tipo === 'literal'
-    ? el('span', 'selo selo--oficial', 'texto oficial')
-    : el('span', 'selo selo--resumo', 'resumo para o protótipo'));
-  if (d.situacao === 'revogada') linhaArt.append(el('span', 'selo selo--revogada', 'revogada'));
-  cabecalho.append(linhaArt);
-  card.append(cabecalho);
-
-  const trecho = el('section', 'norma__bloco');
-  trecho.append(el('p', 'norma__rotulo', 'Texto do artigo'));
-  trecho.append(el('blockquote', 'norma__texto', n.texto));
-  card.append(trecho);
-
-  if (opcoes.explicar) {
-    const bloco = el('section', 'norma__bloco norma__explicacao');
-    bloco.append(el('p', 'norma__rotulo', 'Em linguagem simples · explicação gerada por IA'));
-    const corpo = el('p', 'norma__explicacao-texto msg__pensando', 'Gerando explicação…');
-    bloco.append(corpo);
-    card.append(bloco);
-    explicar(indice, opcoes.pergunta).then(txt => {
-      if (!txt) { bloco.remove(); return; }
-      corpo.className = 'norma__explicacao-texto';
-      corpo.textContent = txt;
-    }).catch(() => {
-      corpo.className = 'norma__explicacao-texto norma__explicacao-erro';
-      corpo.textContent = 'Não foi possível gerar a explicação agora. O texto do artigo acima continua valendo.';
-    });
-  }
-
-  const rodape = el('footer', 'norma__rodape');
-  rodape.append(el('span', 'norma__resolucao', d.resolucao));
-  rodape.append(linkPdf(d, 'norma__link', 'Baixar PDF', true));
-  card.append(rodape);
-  return card;
+function autoCrescer() {
+  /* campo vazio mede o placeholder, que no celular pode ocupar duas linhas */
+  const vazio = $campo.value === '';
+  if (vazio) $campo.value = $campo.placeholder;
+  $campo.style.height = 'auto';
+  $campo.style.height = Math.min($campo.scrollHeight, 128) + 'px';
+  if (vazio) $campo.value = '';
 }
 
-function painelBusca(r) {
-  const det = el('details', 'painel');
-  det.append(el('summary', 'painel__titulo', 'Como o sistema encontrou isso'));
+function ondulacao(botao, evento) {
+  if (reduzirMovimento) return;
+  const r = botao.getBoundingClientRect();
+  const x = (evento && evento.clientX ? evento.clientX - r.left : r.width / 2);
+  const y = (evento && evento.clientY ? evento.clientY - r.top : r.height / 2);
+  const d = Math.max(r.width, r.height) * 2;
+  const onda = el('span', 'ondulacao');
+  onda.style.width = onda.style.height = d + 'px';
+  onda.style.left = (x - d / 2) + 'px';
+  onda.style.top = (y - d / 2) + 'px';
+  botao.appendChild(onda);
+  onda.animate(
+    [{ transform: 'scale(.15)', opacity: .7 }, { transform: 'scale(1)', opacity: 0 }],
+    { duration: 450, easing: 'cubic-bezier(.2,.8,.2,1)' }
+  ).onfinish = () => onda.remove();
+}
 
-  const corpo = el('div', 'painel__corpo');
-  const termos = el('p', 'painel__linha');
-  termos.append(el('span', 'painel__rotulo', 'Termos buscados'));
-  termos.append(el('span', 'painel__valor', r.base.join(', ') || '—'));
-  corpo.append(termos);
+/* ---------- digitação com altura reservada (sem salto de layout) ---------- */
+function criarDigitavel() {
+  const wrap = el('span', 'digitavel');
+  const fantasma = el('span', 'digitavel__fantasma');
+  const visivel = el('span', 'digitavel__visivel');
+  wrap.append(fantasma, visivel);
+  return { wrap, fantasma, visivel };
+}
 
-  const extras = r.extras;
-  if (extras.length) {
-    const exp = el('p', 'painel__linha');
-    exp.append(el('span', 'painel__rotulo', 'Expansão por significado'));
-    exp.append(el('span', 'painel__valor', [...new Set(extras)].join(', ')));
-    corpo.append(exp);
+async function digitar(digitavel, texto, opcoes) {
+  const g = geracao;
+  const { visivel } = digitavel;
+  if (reduzirMovimento) {
+    visivel.setAttribute('data-fade', '');
+    visivel.textContent = texto;
+    requestAnimationFrame(() => requestAnimationFrame(() => visivel.setAttribute('data-fade', 'pronto')));
+    await esperar(130);
+    return;
   }
+  const cursor = el('span', 'cursor');
+  const alvo = document.createTextNode('');
+  visivel.append(alvo, cursor);
+  for (const ch of texto) {
+    if (g !== geracao) { cursor.remove(); return; }
+    alvo.textContent += ch;
+    let pausa = opcoes.msPorChar;
+    if (opcoes.pausaPontuacao && (ch === '.' || ch === ',')) pausa += opcoes.pausaPontuacao;
+    await esperar(pausa);
+  }
+  cursor.remove();
+}
 
-  const tabela = el('table', 'ranking');
-  const thead = el('thead');
-  const trh = el('tr');
-  ['Artigo', 'Palavra exata', 'Significado', 'Referência', 'RRF', 'Rerank'].forEach(h => trh.append(el('th', null, h)));
-  thead.append(trh); tabela.append(thead);
+/* ---------- card da resposta ---------- */
+function montarCard(resposta) {
+  const card = el('article', 'card');
 
-  const tbody = el('tbody');
-  r.resultados.forEach(res => {
-    const tr = el('tr');
-    tr.append(el('td', 'ranking__artigo', NORMAS[res.i].artigo));
-    tr.append(el('td', 'num', res.pos.lex ? '#' + res.pos.lex : '—'));
-    tr.append(el('td', 'num', res.pos.sem ? '#' + res.pos.sem : '—'));
-    tr.append(el('td', 'num', res.pos.ref ? '#' + res.pos.ref : '—'));
-    tr.append(el('td', 'num', res.rrf.toFixed(4)));
-    tr.append(el('td', 'num', res.rerank != null ? res.rerank.toFixed(3) : '—'));
-    tbody.append(tr);
+  const linha1 = el('div', 'card__linha1');
+  linha1.append(el('h2', 'card__documento', resposta.documento));
+  const verPdf = el('button', 'card__ver-pdf', 'Ver PDF');
+  verPdf.type = 'button';
+  verPdf.addEventListener('click', () => {
+    if (resposta.pdfLocal && window.abrirVisorPdf) {
+      window.abrirVisorPdf({
+        titulo: (resposta.documentoCurto || resposta.documento) + ' · PDF oficial',
+        pdfLocal: resposta.pdfLocal,
+        pdfOficial: resposta.pdfOficial,
+        trecho: resposta.trechoParaDestacar,
+        chaveEmbutida: resposta.chaveEmbutida,
+        dicaFalha: resposta.artigo ? "Procure por '" + resposta.artigo + "'." : '',
+        devolverFoco: verPdf
+      });
+    } else {
+      window.open(resposta.pdfOficial, '_blank', 'noopener');
+    }
   });
-  tabela.append(tbody);
+  linha1.append(verPdf);
+  card.append(linha1);
 
-  const rolagem = el('div', 'ranking__rolagem');
-  rolagem.append(tabela);
-  corpo.append(rolagem);
+  const chips = el('div', 'card__chips');
+  chips.append(el('span', 'chip-artigo', resposta.artigo));
+  if (resposta.tema) chips.append(el('span', 'chip-tema', resposta.tema));
+  if (resposta.oficial !== false) chips.append(el('span', 'chip-oficial', 'Texto oficial'));
+  card.append(chips);
 
-  if (r.descartadas.length) {
-    const aviso = el('p', 'painel__aviso',
-      r.descartadas.length + ' trecho(s) de norma revogada foram encontrados e descartados pelo filtro de vigência.');
-    corpo.append(aviso);
+  card.append(el('p', 'card__rotulo', 'O que diz o artigo'));
+  const oficial = criarDigitavel();
+  const blocoOficial = el('div', 'card__oficial');
+  blocoOficial.append(oficial.wrap);
+  card.append(blocoOficial);
+
+  card.append(el('p', 'card__rotulo', 'Em linguagem simples · IA'));
+  const simples = criarDigitavel();
+  const blocoSimples = el('div', 'card__simples');
+  blocoSimples.append(simples.wrap);
+  card.append(blocoSimples);
+
+  card.append(el('hr', 'card__divisor'));
+  const rodape = el('div', 'card__rodape');
+  rodape.append(el('p', 'card__referencia', resposta.referencia || ''));
+  const baixar = el('a', 'card__baixar', 'Baixar PDF');
+  baixar.href = encodeURI(resposta.pdfLocal || resposta.pdfOficial);
+  baixar.setAttribute('download', '');
+  if (!resposta.pdfLocal) { baixar.target = '_blank'; baixar.rel = 'noopener'; }
+  rodape.append(baixar);
+  card.append(rodape);
+
+  return { card, oficial, simples };
+}
+
+/* ---------- fluxo de resposta ---------- */
+function esconderHero() {
+  if (temConversa) return Promise.resolve();
+  temConversa = true;
+  return new Promise(resolve => {
+    $conversa.hidden = false;
+    if (reduzirMovimento) { $hero.hidden = true; resolve(); return; }
+    $hero.classList.add('hero--saindo');
+    setTimeout(() => { $hero.hidden = true; resolve(); }, 200);
+  });
+}
+
+/* Explicação em linguagem simples. Com CONFIG_IA.endpoint definido, o trecho
+   do artigo é enviado ao modelo por POST { pergunta, documento, artigo, texto }
+   e a resposta esperada é { explicacao }. Sem endpoint, usa as explicações
+   pré-geradas de EXPLICACOES (normas.js). */
+const CONFIG_IA = { endpoint: null };
+
+async function explicar(n, pergunta) {
+  if (!CONFIG_IA.endpoint) return EXPLICACOES[n.id] || null;
+  try {
+    const resp = await fetch(CONFIG_IA.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pergunta, documento: DOCUMENTOS[n.doc].nome, artigo: n.artigo, texto: n.texto })
+    });
+    if (!resp.ok) return null;
+    return (await resp.json()).explicacao || null;
+  } catch {
+    return null;
   }
-
-  det.append(corpo);
-  return det;
 }
 
-function mensagem(lado, conteudo) {
-  const bolha = el('div', 'msg msg--' + lado);
-  if (typeof conteudo === 'string') bolha.append(el('p', 'msg__texto', conteudo));
-  else bolha.append(conteudo);
-  $conversa.append(bolha);
-  bolha.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'end' });
-  return bolha;
+async function respostaDoMotor(pergunta) {
+  /* usa o pipeline real (busca híbrida + RRF + reranking) definido acima */
+  const r = buscar(pergunta, false);
+  if (!r.confiante || r.resultados.length === 0) return null;
+  const n = NORMAS[r.resultados[0].i];
+  const d = DOCUMENTOS[n.doc];
+  return {
+    documento: d.nome,
+    documentoCurto: d.nomeCurto || d.sigla,
+    artigo: n.artigo,
+    tema: n.assunto,
+    textoOficial: n.texto,
+    linguagemSimples: await explicar(n, pergunta),
+    referencia: d.resolucao,
+    pdfLocal: PDF_LOCAIS[n.doc] || null,
+    pdfOficial: d.link,
+    chaveEmbutida: PDF_LOCAIS[n.doc] ? n.doc : null,
+    oficial: n.tipo === 'literal',
+    trechoParaDestacar: n.tipo === 'literal' ? n.texto : null
+  };
 }
 
-function responder(pergunta) {
-  const r = buscar(pergunta, $revogadas.checked);
-  const corpo = el('div');
 
-  if (!r.confiante || r.resultados.length === 0) {
-    corpo.append(el('p', 'msg__texto',
-      'Não encontrei essa informação nas normativas indexadas. Procure a secretaria acadêmica do seu campus ou a coordenação do curso.'));
-    const vig = NORMAS.filter(n => DOCUMENTOS[n.doc].situacao === 'vigente').length;
-    const docs = Object.values(DOCUMENTOS).filter(d => d.situacao === 'vigente').length;
-    corpo.append(el('p', 'msg__nota',
-      'Responder "não sei" em vez de inventar é uma regra do sistema: ' + vig +
-      ' artigos de ' + docs + (docs === 1 ? ' documento' : ' documentos') +
-      ' estão indexados, e nada fora disso é usado como fonte.'));
-    corpo.append(painelBusca(r));
-    mensagem('bot', corpo);
+async function responderPergunta(texto) {
+  const g = geracao;
+  const pergunta = texto.trim();
+  if (!pergunta) return;
+
+  await esconderHero();
+  if (g !== geracao) return;
+
+  const balao = el('div', 'balao', pergunta);
+  entrar(balao);
+  $conversa.append(balao);
+  balao.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'nearest' });
+
+  $campo.value = '';
+  autoCrescer();
+  definirEstado('answering');
+
+  const resposta = await respostaDoMotor(pergunta);
+
+  await esperar(reduzirMovimento ? 0 : 120);
+  if (g !== geracao) return;
+
+  if (!resposta) {
+    const aviso = el('div', 'aviso-bot',
+      'Não encontrei essa informação nas normativas indexadas. Procure a secretaria acadêmica do seu campus ou a coordenação do curso.');
+    entrar(aviso);
+    $conversa.append(aviso);
+    aviso.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'nearest' });
+    $anuncio.textContent = aviso.textContent;
+    definirEstado('done');
+    $campo.focus({ preventScroll: true });
     return;
   }
 
-  const principal = r.resultados[0];
-  corpo.append(cartaoNorma(principal.i, { principal: true, explicar: true, pergunta }));
+  definirEstado('answering', 'Fonte encontrada · ' + (resposta.documentoCurto || resposta.documento));
 
-  const outros = r.resultados.slice(1, 3);
-  if (outros.length) {
-    corpo.append(el('p', 'msg__sub', 'Artigos relacionados'));
-    const lista = el('div', 'relacionados');
-    outros.forEach(o => lista.append(cartaoNorma(o.i)));
-    corpo.append(lista);
-  }
+  const semExplicacao = !resposta.linguagemSimples;
+  const textoSimples = resposta.linguagemSimples ||
+    'Não foi possível gerar a explicação agora. O texto do artigo acima continua valendo.';
 
-  corpo.append(painelBusca(r));
-  mensagem('bot', corpo);
+  const { card, oficial, simples } = montarCard(resposta);
+  /* alturas reservadas desde o início: o fantasma já contém o texto completo */
+  oficial.fantasma.textContent = resposta.textoOficial;
+  simples.fantasma.textContent = textoSimples;
+  entrar(card);
+  $conversa.append(card);
+  card.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'nearest' });
+
+  /* leitor de tela recebe o texto completo uma vez só */
+  $anuncio.textContent = resposta.documento + '. ' + resposta.artigo + '. ' +
+    resposta.textoOficial + ' Em linguagem simples: ' + textoSimples;
+
+  await esperar(reduzirMovimento ? 0 : 260);
+  if (g !== geracao) return;
+
+  /* ritmo do vídeo (18 ms e 55 ms por caractere); textos longos do motor real
+     aceleram para que nenhuma etapa passe de ~6 s e ~14 s */
+  const ritmoOficial = Math.min(18, 6000 / resposta.textoOficial.length);
+  const ritmoSimples = Math.min(55, 14000 / textoSimples.length);
+  const pausa = ritmoSimples < 55 ? Math.round(220 * ritmoSimples / 55) : 220;
+  await digitar(oficial, resposta.textoOficial, { msPorChar: ritmoOficial });
+  if (g !== geracao) return;
+  await esperar(reduzirMovimento ? 0 : 250);
+  if (g !== geracao) return;
+  await digitar(simples, textoSimples, { msPorChar: ritmoSimples, pausaPontuacao: pausa });
+  if (g !== geracao) return;
+  if (semExplicacao) simples.visivel.classList.add('digitavel--erro');
+
+  definirEstado('done');
+  $campo.focus({ preventScroll: true });
 }
 
-function perguntar(texto) {
-  const p = texto.trim();
-  if (!p) return;
-  mensagem('eu', p);
-  const pensando = mensagem('bot', el('p', 'msg__pensando', 'Buscando nas normativas…'));
-  setTimeout(() => { pensando.remove(); responder(p); }, reduzirMovimento ? 0 : 420);
-}
-
-document.querySelectorAll('.sugestao').forEach(b => {
-  b.addEventListener('click', () => perguntar(b.textContent));
-});
-
-/* ---------- entrada por voz ----------
-   Web Speech API em pt-BR. A transcrição fica visível e só é enviada quando o
-   usuário confirma em "Perguntar"; se saiu errada, ele grava de novo ou descarta.
-   Estados em #voz[data-estado]: pronto, gravando, revisao, indisponivel. */
-const $voz = document.getElementById('voz');
-const $gravar = document.getElementById('btn-gravar');
-const $gravarRotulo = document.getElementById('btn-gravar-rotulo');
-const $dica = document.getElementById('transcricao-dica');
-const $transcricao = document.getElementById('transcricao-texto');
-const $descartar = document.getElementById('btn-descartar');
-const $enviar = document.getElementById('btn-enviar');
-const $erroVoz = document.getElementById('erro-voz');
-
-const DICAS = {
-  pronto: 'Toque no microfone e faça sua pergunta em voz alta.',
-  gravando: 'Ouvindo… fale sua pergunta e toque de novo para parar.',
-  indisponivel: 'Entrada por voz indisponível neste navegador.'
-};
-const ERROS_VOZ = {
-  'not-allowed': 'O acesso ao microfone foi negado. Libere a permissão no ícone ao lado do endereço da página e tente de novo.',
-  'service-not-allowed': 'O navegador bloqueou o reconhecimento de voz nesta página. Abra o sistema por http://localhost (Live Server) ou https e libere o microfone.',
-  'audio-capture': 'Nenhum microfone foi encontrado. Verifique se ele está conectado e não está em uso por outro programa.',
-  'no-speech': 'Não ouvi nada. Toque no microfone e fale um pouco mais perto dele.',
-  'network': 'A transcrição precisa de internet e a conexão falhou. Verifique a rede ou digite a pergunta no campo abaixo.',
-  'language-not-supported': 'Este navegador não transcreve português. Tente no Chrome ou no Edge.',
-  'sem-texto': 'Não consegui entender a pergunta. Tente gravar de novo, falando devagar.'
-};
-
+/* ---------- voz (Web Speech API) ----------
+   O texto parcial aparece no campo enquanto a pessoa fala. A escuta termina
+   sozinha depois de uma pausa (ou num novo clique no microfone) e vai para
+   "review", onde a pessoa confere e clica em Perguntar. Se nada foi dito,
+   volta ao estado anterior com o motivo na linha de ajuda. */
 const Reconhecimento = window.SpeechRecognition || window.webkitSpeechRecognition;
-let reconhecedor = null, textoFinal = '', erroAtual = null;
+const micIndisponivel = !Reconhecimento;
+const PAUSA_FIM_FALA = 1600;
+const ERROS_VOZ = {
+  'not-allowed': location.protocol === 'file:'
+    ? 'O navegador bloqueia o microfone em arquivo aberto direto. Abra pelo Live Server ou digite sua pergunta.'
+    : 'O microfone foi bloqueado. Libere a permissão no ícone ao lado do endereço ou digite sua pergunta.',
+  'service-not-allowed': 'O navegador bloqueou a voz nesta página. Abra pelo Live Server (http://localhost) ou digite sua pergunta.',
+  'audio-capture': 'Nenhum microfone encontrado. Verifique se ele está conectado ou digite sua pergunta.',
+  'network': 'A transcrição de voz precisa de internet. Verifique a conexão ou digite sua pergunta.',
+  'no-speech': 'Não ouvi nada. Clique no microfone e fale de novo.',
+  'language-not-supported': 'Este navegador não transcreve português. Tente no Chrome ou no Edge.'
+};
+let reconhecedor = null;
+let erroVoz = null;
+let timerFimFala = null;
 
-function mostrarErro(msg) {
-  $erroVoz.textContent = msg || '';
-  $erroVoz.hidden = !msg;
+function rotularMic(ouvindo) {
+  $mic.setAttribute('aria-label', ouvindo ? 'Parar de ouvir' : 'Falar pergunta');
+  $mic.setAttribute('aria-pressed', String(ouvindo));
 }
 
-function definirEstado(estado) {
-  $voz.dataset.estado = estado;
-  const gravando = estado === 'gravando';
-  $gravar.setAttribute('aria-pressed', String(gravando));
-  $gravarRotulo.textContent = gravando ? 'Parar gravação' : (estado === 'revisao' ? 'Gravar de novo' : 'Gravar pergunta');
-  $gravar.disabled = estado === 'indisponivel';
-  $enviar.disabled = estado !== 'revisao';
-  $descartar.hidden = estado !== 'revisao';
-  const temTexto = estado === 'gravando' ? $transcricao.textContent !== '' : estado === 'revisao';
-  $transcricao.hidden = !temTexto;
-  $dica.hidden = temTexto;
-  if (DICAS[estado]) $dica.textContent = DICAS[estado];
-}
+function iniciarVoz() {
+  erroVoz = null;
+  const rec = new Reconhecimento();
+  rec.lang = 'pt-BR';
+  rec.interimResults = true;
+  rec.continuous = true;
+  rec.maxAlternatives = 1;
 
-function limparTranscricao() {
-  textoFinal = '';
-  $transcricao.textContent = '';
-  definirEstado('pronto');
-}
-
-function iniciarGravacao() {
-  mostrarErro(null);
-  textoFinal = ''; erroAtual = null;
-  $transcricao.textContent = '';
-  reconhecedor = new Reconhecimento();
-  reconhecedor.lang = 'pt-BR';
-  reconhecedor.interimResults = true;
-  reconhecedor.continuous = false;
-  reconhecedor.maxAlternatives = 1;
-
-  reconhecedor.onresult = e => {
-    let parcial = '';
-    textoFinal = '';
-    for (const res of e.results) {
-      if (res.isFinal) textoFinal += res[0].transcript;
-      else parcial += res[0].transcript;
-    }
-    $transcricao.textContent = (textoFinal + parcial).trim();
-    $transcricao.hidden = false; $dica.hidden = true;
+  rec.onresult = e => {
+    if (rec !== reconhecedor) return;
+    let texto = '';
+    for (const res of e.results) texto += res[0].transcript;
+    $campo.value = texto.trim();
+    autoCrescer();
+    clearTimeout(timerFimFala);
+    timerFimFala = setTimeout(() => { if (rec === reconhecedor) rec.stop(); }, PAUSA_FIM_FALA);
   };
-  reconhecedor.onerror = e => { erroAtual = e.error; };
-  reconhecedor.onend = () => {
+  rec.onerror = e => { erroVoz = e.error; };
+  rec.onend = () => {
+    clearTimeout(timerFimFala);
+    if (rec !== reconhecedor) return;
     reconhecedor = null;
-    const texto = (textoFinal || $transcricao.textContent).trim();
-    if (texto) {
-      $transcricao.textContent = texto;
-      definirEstado('revisao');
-      $enviar.focus();
+    rotularMic(false);
+    if (estado !== 'listening') return;
+    if ($campo.value.trim()) {
+      definirEstado('review');
+      $enviar.focus({ preventScroll: true });
       return;
     }
-    $transcricao.textContent = '';
-    definirEstado('pronto');
-    if (erroAtual !== 'aborted') mostrarErro(ERROS_VOZ[erroAtual] || ERROS_VOZ['sem-texto']);
-    if (erroAtual === 'network') mostrarCampoTexto(true);
+    const motivo = erroVoz === 'aborted' ? null
+      : (ERROS_VOZ[erroVoz] || ERROS_VOZ['no-speech']);
+    definirEstado(temConversa ? 'done' : 'idle', motivo);
   };
 
+  reconhecedor = rec;
+  $campo.value = '';
+  definirEstado('listening');
+  rotularMic(true);
   try {
-    reconhecedor.start();
-    definirEstado('gravando');
+    rec.start();
   } catch {
     reconhecedor = null;
-    definirEstado('pronto');
-    mostrarErro('Não foi possível iniciar a gravação. Tente de novo em alguns segundos.');
+    rotularMic(false);
+    definirEstado(temConversa ? 'done' : 'idle', 'Não foi possível ligar o microfone. Tente de novo em alguns segundos.');
   }
 }
 
-$gravar.addEventListener('click', () => {
-  if (reconhecedor) reconhecedor.stop();
-  else iniciarGravacao();
-});
-$descartar.addEventListener('click', () => { mostrarErro(null); limparTranscricao(); $gravar.focus(); });
-$enviar.addEventListener('click', () => {
-  const texto = $transcricao.textContent;
-  mostrarErro(null);
-  limparTranscricao();
-  perguntar(texto);
-});
-
-/* ---------- entrada por texto ----------
-   Alternativa discreta ao microfone: a transcrição depende de internet e não
-   existe no Firefox. Sem suporte a voz, o campo já abre e não pode ser fechado. */
-const $digitar = document.getElementById('digitar');
-const $campoTexto = document.getElementById('campo-texto');
-const $alternarTexto = document.getElementById('btn-digitar');
-
-function mostrarCampoTexto(aberto) {
-  $digitar.hidden = !aberto;
-  $alternarTexto.setAttribute('aria-expanded', String(aberto));
-  $alternarTexto.textContent = aberto ? 'Esconder campo de texto' : 'Prefiro digitar';
-  if (aberto) $campoTexto.focus();
+function pararVoz(descartar) {
+  if (!reconhecedor) return;
+  const rec = reconhecedor;
+  clearTimeout(timerFimFala);
+  if (descartar) {
+    reconhecedor = null;
+    rotularMic(false);
+    try { rec.abort(); } catch {}
+  } else {
+    try { rec.stop(); } catch {}
+  }
 }
 
-$alternarTexto.addEventListener('click', () => mostrarCampoTexto($digitar.hidden));
-$digitar.addEventListener('submit', e => {
-  e.preventDefault();
-  const texto = $campoTexto.value;
-  $campoTexto.value = '';
-  perguntar(texto);
-});
-$campoTexto.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && Reconhecimento) { mostrarCampoTexto(false); $alternarTexto.focus(); }
+/* ---------- eventos ---------- */
+$mic.addEventListener('click', () => {
+  if (estado === 'answering' || micIndisponivel) return;
+  if (reconhecedor) pararVoz(false);
+  else iniciarVoz();
 });
 
-if (!Reconhecimento) {
-  definirEstado('indisponivel');
-  mostrarErro('Este navegador não suporta voz. Digite sua pergunta no campo abaixo.');
-  $alternarTexto.hidden = true;
-  $digitar.hidden = false;
-} else {
-  definirEstado('pronto');
+$campo.addEventListener('input', () => {
+  autoCrescer();
+  if (estado === 'listening') return;
+  const temTexto = $campo.value.trim() !== '';
+  if (temTexto && estado !== 'review') definirEstado('review');
+  else if (!temTexto && estado === 'review') definirEstado(temConversa ? 'done' : 'idle');
+});
+
+$campo.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (estado === 'review') responderPergunta($campo.value);
+  }
+});
+
+$lixeira.addEventListener('click', () => {
+  $campo.value = '';
+  autoCrescer();
+  definirEstado(temConversa ? 'done' : 'idle');
+  $campo.focus({ preventScroll: true });
+});
+
+$enviar.addEventListener('click', e => {
+  if (estado !== 'review') return;
+  ondulacao($enviar, e);
+  responderPergunta($campo.value);
+});
+
+$reiniciar.addEventListener('click', () => {
+  geracao++;
+  pararVoz(true);
+  if (window.fecharVisorPdf) window.fecharVisorPdf();
+  $conversa.innerHTML = '';
+  $conversa.hidden = true;
+  temConversa = false;
+  $hero.hidden = false;
+  $hero.classList.remove('hero--saindo');
+  $campo.value = '';
+  autoCrescer();
+  $anuncio.textContent = '';
+  definirEstado('idle');
+});
+
+/* ---------- estado inicial ---------- */
+$seloDemo.hidden = !MODO_DEMO;
+$rodape.textContent = MODO_DEMO
+  ? 'Protótipo acadêmico · Explicações pré-geradas para demonstração · Fonte oficial disponível em cada resposta.'
+  : 'Protótipo acadêmico · Fonte oficial disponível em cada resposta.';
+if (micIndisponivel) {
+  $mic.title = 'Seu navegador não suporta voz. Digite sua pergunta.';
+  $mic.setAttribute('aria-label', 'Falar pergunta (indisponível neste navegador)');
 }
-
-/* ---------- download das normativas ---------- */
-const $baixar = document.getElementById('baixar');
-const $baixarLista = document.getElementById('baixar-lista');
-Object.values(DOCUMENTOS)
-  .sort((a, b) => (a.situacao === 'revogada') - (b.situacao === 'revogada'))
-  .forEach(d => {
-    const li = el('li');
-    const a = linkPdf(d, 'baixar__item', null, true);
-    a.append(el('span', 'baixar__nome', d.nome), el('span', 'baixar__meta', d.resolucao));
-    if (d.situacao === 'revogada') a.append(el('span', 'selo selo--revogada', 'revogada'));
-    li.append(a);
-    $baixarLista.append(li);
-  });
-document.addEventListener('click', e => { if ($baixar.open && !$baixar.contains(e.target)) $baixar.open = false; });
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $baixar.open) { $baixar.open = false; $baixar.querySelector('summary').focus(); }
-});
-
-/* estatísticas do cabeçalho */
-const vigentes = NORMAS.filter(n => DOCUMENTOS[n.doc].situacao === 'vigente').length;
-document.getElementById('stat-artigos').textContent = vigentes;
-document.getElementById('stat-docs').textContent =
-  Object.values(DOCUMENTOS).filter(d => d.situacao === 'vigente').length;
+definirEstado('idle');
+addEventListener('resize', autoCrescer);
+if (document.fonts) document.fonts.ready.then(autoCrescer);
+})();

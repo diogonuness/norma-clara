@@ -1,76 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Normativas do IFTO</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#EFEBDD">
+<meta name="color-scheme" content="light">
+<title>Norma Clara</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4F3A'/%3E%3Cpath d='M9 22V10h2.6l7 8.4V10H21v12h-2.6l-7-8.4V22H9z' fill='%23FAFAF1'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
+</head>
+<body data-estado="idle">
+
+<div class="veu" id="veu" aria-hidden="true"></div>
 
 <header class="topo">
-  <div class="topo__interno">
-    <h1 class="topo__marca">Normativas do <span>IFTO</span></h1>
-    <p class="topo__stats"><b id="stat-docs">0</b> documentos vigentes · <b id="stat-artigos">0</b> artigos indexados · busca híbrida + RRF</p>
-    <details class="baixar" id="baixar">
-      <summary class="baixar__botao">
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Baixar normativas
-      </summary>
-      <div class="baixar__menu">
-        <p class="baixar__titulo">PDFs oficiais</p>
-        <ul class="baixar__lista" id="baixar-lista"></ul>
-      </div>
-    </details>
+  <div class="topo__esquerda">
+    <span class="topo__marca">Norma Clara</span>
+    <span class="topo__selo" id="selo-demo" hidden>IFTO · Demonstração</span>
   </div>
+  <button class="topo__reiniciar" id="btn-reiniciar" type="button">Reiniciar</button>
 </header>
 
-<main class="palco">
-  <section class="intro">
-    <h2>Pergunte em português e receba o artigo que responde</h2>
-    <p>O sistema procura o trecho da norma, mostra o artigo que o sustenta e o link do PDF oficial. Quando a resposta não está nos documentos indexados, ele diz que não sabe em vez de inventar.</p>
-    <div class="sugestoes">
-      <button class="sugestao" type="button">Posso trancar a matrícula?</button>
-      <button class="sugestao" type="button">Faltei na prova, e agora?</button>
-      <button class="sugestao" type="button">Qual a frequência mínima para passar?</button>
-      <button class="sugestao" type="button">Quanto é o auxílio estudantil?</button>
-      <button class="sugestao" type="button">O que diz o Art. 75?</button>
-      <button class="sugestao" type="button">A biblioteca abre no sábado?</button>
-    </div>
+<main class="palco" id="palco">
+  <section class="hero" id="hero">
+    <p class="hero__sobretitulo">Menos dúvidas. Mais clareza.</p>
+    <h1 class="hero__titulo">Entenda seus direitos.<br>Sem complicar.</h1>
+    <p class="hero__subtitulo">Faça sua pergunta. Encontre a regra e entenda o que ela significa para você.</p>
   </section>
 
-  <div class="conversa" id="conversa" aria-live="polite"></div>
+  <section class="conversa" id="conversa" hidden></section>
 </main>
 
-<div class="composer">
-  <div class="composer__interno">
-    <div class="composer__campo" id="voz" data-estado="pronto">
-      <button class="composer__gravar" id="btn-gravar" type="button" aria-pressed="false" aria-describedby="transcricao">
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <span class="sr-only" id="btn-gravar-rotulo">Gravar pergunta</span>
+<div class="faixa" id="faixa">
+  <div class="faixa__interno">
+    <div class="composer">
+      <button class="composer__mic" id="btn-mic" type="button" aria-label="Falar pergunta">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
       </button>
-      <div class="composer__transcricao" id="transcricao" aria-live="polite">
-        <p class="composer__dica" id="transcricao-dica">Toque no microfone e faça sua pergunta em voz alta.</p>
-        <p class="composer__texto" id="transcricao-texto" hidden></p>
+      <div class="composer__campo">
+        <label class="sr-only" for="campo">Sua pergunta</label>
+        <textarea class="composer__input" id="campo" rows="1" autocomplete="off"
+          placeholder="Clique no microfone para fazer sua pergunta."></textarea>
+        <button class="composer__lixeira" id="btn-lixeira" type="button" aria-label="Apagar pergunta" hidden>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+        </button>
       </div>
-      <button class="composer__descartar" id="btn-descartar" type="button" hidden>Descartar</button>
-      <button class="composer__enviar" id="btn-enviar" type="button" disabled>Perguntar</button>
+      <button class="composer__enviar" id="btn-enviar" type="button" disabled aria-disabled="true">Perguntar</button>
     </div>
-    <p class="composer__erro" id="erro-voz" role="alert" hidden></p>
-    <form class="composer__digitar" id="digitar" hidden>
-      <label class="sr-only" for="campo-texto">Digite sua pergunta</label>
-      <input class="composer__input" id="campo-texto" type="text" autocomplete="off" enterkeyhint="send" placeholder="Digite sua pergunta e tecle Enter">
-    </form>
-    <div class="composer__opcoes">
-      <button class="composer__alternar" id="btn-digitar" type="button" aria-expanded="false" aria-controls="digitar">Prefiro digitar</button>
-      <label for="incluir-revogadas">
-        <input type="checkbox" id="incluir-revogadas">
-        Incluir normas revogadas
-      </label>
-      <span>Abra “Como o sistema encontrou isso” em cada resposta para ver os dois rankings.</span>
-    </div>
+    <p class="faixa__ajuda" id="ajuda">Pergunte com suas palavras. A resposta vem com a fonte.</p>
+    <p class="faixa__rodape" id="rodape">Protótipo acadêmico · Transcrição e resposta simuladas para demonstração · Fonte oficial disponível em cada resposta.</p>
   </div>
 </div>
 
-<footer class="rodape">
-  <p>Protótipo acadêmico do V Ideathon Maker da 17ª JICE. Os artigos marcados como “texto oficial” trazem a redação literal da norma; os marcados como “resumo para o protótipo” são sínteses escritas para esta demonstração. Nos dois casos, o documento completo está no PDF oficial, linkado em toda resposta. A explicação em linguagem simples é gerada por IA a partir do texto do artigo e vem sempre depois dele. A busca reduz as palavras ao radical (“trancar” e “trancamento” caem no mesmo termo) e amplia a pergunta com um dicionário de termos; na versão final, o dicionário é substituído por embeddings.</p>
-</footer>
+<div class="modal" id="modal-pdf" hidden>
+  <div class="modal__fundo" id="modal-fundo"></div>
+  <div class="modal__janela" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+    <header class="modal__cabecalho">
+      <h2 class="modal__titulo" id="modal-titulo">PDF oficial</h2>
+      <button class="modal__fechar" id="modal-fechar" type="button" aria-label="Fechar">×</button>
+    </header>
+    <p class="modal__aviso" id="modal-aviso" hidden></p>
+    <div class="modal__paginas" id="modal-paginas" tabindex="0"></div>
+    <footer class="modal__rodape">
+      <a class="modal__oficial" id="modal-oficial" href="#" target="_blank" rel="noopener">Abrir no site do IFTO ↗</a>
+    </footer>
+  </div>
+</div>
+
+<div class="sr-only" id="anuncio" aria-live="polite"></div>
 
 <script src="normas.js"></script>
-<script src="app.js"></script>
+<script src="vendor/pdf.min.js" defer></script>
+<script src="visor-pdf.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>

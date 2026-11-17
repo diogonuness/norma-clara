@@ -31,6 +31,7 @@ const DOCUMENTOS = {
   },
   disciplinar: {
     nome: 'Regulamento Disciplinar Discente do IFTO',
+    nomeCurto: 'Regulamento Disciplinar Discente',
     sigla: 'Disciplinar Discente',
     resolucao: 'Resolução nº 197/2023/CONSUP/IFTO, de 18 de abril de 2023; em vigor desde 1º de junho de 2023',
     data: '2023-04-18',
@@ -257,7 +258,7 @@ const NORMAS = [
     tags:'voltar depois de expulso nova matricula ano seguinte impedimento processo seletivo readmissao' },
 
   { id:'disc-22', doc:'disciplinar', artigo:'Art. 22', assunto:'Prazo para recorrer da punição', tipo:'literal',
-    texto:'O estudante terá direito a recurso, no prazo de até três dias úteis, a contar da publicação da decisão da Comissão ou Equipe Disciplinar Discente Local.',
+    texto:'O estudante terá direito a recurso (Anexo IV), no prazo de até três dias úteis, a contar da publicação da decisão da Comissão/Equipe Disciplinar Discente Local.',
     tags:'recurso recorrer da punicao levei uma advertencia e agora fui advertido fui suspenso prazo tres dias uteis como contestar discordo da decisao o que fazer' },
 
   { id:'disc-23', doc:'disciplinar', artigo:'Art. 23', assunto:'Prazo de resposta ao recurso', tipo:'literal',
@@ -376,7 +377,7 @@ const EXPLICACOES = {
   'disc-18': 'Depois de apurar os fatos, a Comissão ou Equipe Disciplinar Discente Local dá um parecer, que passa pela Gerência ou Diretoria de Ensino e chega ao diretor-geral do campus (ou à Diretoria do CREAD), que aplica a medida. Se o que você fez também for crime pela lei penal, uma cópia do processo é enviada à autoridade competente.',
   'disc-19': 'A punição não aparece no seu histórico escolar. As advertências ficam registradas num Termo de Advertência, e a suspensão e o cancelamento num relatório final arquivado na sua pasta de estudante.',
   'disc-20': 'Se sua matrícula for cancelada por infração, você não pode se matricular de novo no ano seguinte. Isso vale mesmo que você seja aprovado num novo processo seletivo feito depois do ocorrido.',
-  'disc-22': 'Se você discordar da punição, pode recorrer em até 3 dias úteis, contados da publicação da decisão da Comissão ou Equipe Disciplinar Discente Local. Fique atento: o prazo é curto e conta só dias úteis.',
+  'disc-22': 'Sim, você pode recorrer se não concordar com a decisão. O prazo é de até 3 dias úteis e começa a contar da publicação da decisão da Comissão ou Equipe Disciplinar Discente Local. Fique de olho nessa data para não perder o prazo.',
   'disc-23': 'Depois que você entra com o recurso, a Comissão ou Equipe Disciplinar Discente Local tem até 3 dias úteis para responder. Esse é o prazo máximo, então a resposta pode vir antes.',
 
   'doc-5': 'Como professor efetivo do IFTO, você trabalha em um de dois regimes: 40 horas semanais com dedicação exclusiva a ensino, pesquisa, extensão e gestão, ou 20 horas semanais em tempo parcial. Em caráter excepcional, para áreas com características específicas, pode ser admitido o regime de 40 horas sem dedicação exclusiva, em dois turnos diários completos.',

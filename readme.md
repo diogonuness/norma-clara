@@ -17,26 +17,45 @@ para recorrer.
 
 ## Como rodar
 
-Não tem build, servidor nem dependência. Abra o `index.html` no navegador.
+Não tem build nem dependência. Para usar a voz, sirva a pasta por
+`http://localhost` — extensão Live Server do VS Code, ou `python -m http.server`
+e abra `http://localhost:8000`. O navegador bloqueia o microfone quando o
+`index.html` é aberto direto do disco (`file://`); nesse caso a pergunta pode ser
+digitada e todo o resto funciona, inclusive o visualizador de PDF.
 
-A entrada por voz usa a Web Speech API, que existe no Chrome e no Edge e precisa
-de internet para transcrever. O campo de texto abre sozinho em dois casos: quando
-o navegador não tem a API de voz, e quando a transcrição falha por falta de
-conexão. Nos demais erros — microfone negado, nenhum microfone, nada falado — a
-mensagem explica o que houve e o campo continua a um clique de distância, em
-"Prefiro digitar". Para testar a voz localmente, sirva a página por `http://localhost`
-(extensão Live Server do VS Code) ou por https — o navegador bloqueia o
-microfone em `file://`.
+O fluxo: clique no microfone, a página escurece e o campo mostra "Pode falar...".
+O que a pessoa fala aparece no campo em tempo real. Depois de uma pausa (ou de um
+novo clique no microfone) a escuta termina, a pessoa confere o texto e clica em
+**Perguntar**. Se nada foi dito, ou o microfone foi bloqueado, a página volta ao
+início e a linha abaixo do campo diz o motivo.
+
+A voz usa a Web Speech API, que existe no Chrome e no Edge e precisa de internet
+para transcrever. Sem ela (Firefox, por exemplo), o botão do microfone fica
+desabilitado com a dica "Seu navegador não suporta voz. Digite sua pergunta." e o
+campo continua aceitando texto.
+
+`Enter` envia, `Shift+Enter` quebra a linha, e "Reiniciar" volta ao estado inicial.
+`index.html?demo=0` tira o selo "IFTO · Demonstração" do cabeçalho.
 
 ## Estrutura
 
 | Arquivo | O que faz |
 | --- | --- |
-| `index.html` | Marcação da página: cabeçalho, conversa, microfone, campo de texto |
-| `styles.css` | Estilos, com tokens de cor para tema claro e escuro |
-| `app.js` | Motor de busca, interface do chat, voz e explicação |
+| `index.html` | Marcação da página: cabeçalho, hero, conversa, composer, modal do PDF |
+| `styles.css` | Estilos e design tokens (cores, tipografia, raios, sombras) |
+| `app.js` | Motor de busca (até o comentário `interface`), depois a interface: máquina de estados do composer, voz e digitação da resposta |
+| `visor-pdf.js` | Modal do PDF com PDF.js: acha a página do artigo pela busca no texto e destaca o trecho |
 | `normas.js` | Base de artigos, metadados dos documentos e explicações |
+| `normativas/` | PDFs oficiais (`01-recorte-do-professor/`, `02-acrescimos/`), `indice.csv` e `pdf-data.js`, cópia em base64 usada só quando a página é aberta por `file://` |
+| `vendor/` | PDF.js 3.11 (build que dispensa módulos ES e roda em `file://`) |
+| `assets/fonts/` | Archivo, Source Serif 4 e JetBrains Mono, self-hosted |
 | `testes.js` | Perguntas-gabarito e checagem de integridade, rodadas com Node |
+
+Ao trocar um PDF de `normativas/`, gere de novo o `pdf-data.js`:
+
+```
+node -e "const fs=require('fs');const p='normativas/01-recorte-do-professor/Regulamento Disciplinar Discente (Res 197-2023).pdf';fs.writeFileSync('normativas/pdf-data.js','window.PDF_EMBUTIDO = { disciplinar: \"'+fs.readFileSync(p).toString('base64')+'\" };\n')"
+```
 
 ## Como a busca funciona
 
@@ -58,25 +77,49 @@ O pipeline reproduz, em JavaScript puro, a arquitetura proposta para o MVP final
    distintos da pergunta o trecho cobre, pesados por idf. Fusão e cobertura pesam
    igual — acima disso, um trecho que aparece nas duas listas vence outro que
    aparece só numa, mesmo quando essa única lista o coloca muito à frente.
-8. **Filtro de vigência.** Artigos de normas revogadas são descartados, salvo se a
-   opção estiver marcada na interface.
+8. **Filtro de vigência.** Artigos de normas revogadas são descartados
+   (`buscar(pergunta, false)`).
 9. **Abstenção.** Se o melhor trecho não cobrir termos temáticos suficientes da
    pergunta, o sistema responde que não sabe e indica a secretaria.
 
-Cada resposta traz um painel "Como o sistema encontrou isso" com os dois
-rankings, a pontuação RRF e a do reranking. É o pipeline visível na tela.
+`buscar()` continua devolvendo os dois rankings, a pontuação RRF e a do
+reranking, para quem quiser inspecionar o pipeline no console.
 
 ## A resposta
 
 A ordem do cartão é fixa e proposital:
 
-1. Nome da normativa e botão para abrir o PDF
-2. Artigo e assunto, com selo de procedência do texto
-3. **Texto do artigo**
-4. Explicação em linguagem simples
+1. Nome da normativa e botão "Ver PDF"
+2. Artigo e assunto, com o selo "texto oficial" quando a redação é literal
+3. **O que diz o artigo**, digitando primeiro
+4. **Em linguagem simples**, digitando depois, em ritmo de leitura
+5. Referência da resolução e "Baixar PDF"
 
 A explicação vem sempre depois do texto e nunca o substitui. Se ela falhar, o
-texto do artigo continua na tela.
+texto do artigo continua na tela. As alturas dos dois blocos são reservadas antes
+da digitação começar, então o cartão não pula.
+
+"Ver PDF" abre o PDF oficial num modal, já na página do artigo e com o trecho
+destacado. A página não é fixada no código: o visor procura o texto do artigo no
+PDF. Se não achar, abre na página 1 com um aviso. Documentos sem PDF local abrem
+o link oficial do IFTO em outra aba.
+
+O formato que o cartão consome (montado por `respostaDoMotor()` em `app.js`):
+
+```json
+{
+  "documento": "Regulamento Disciplinar Discente do IFTO",
+  "documentoCurto": "Regulamento Disciplinar Discente",
+  "artigo": "Art. 22",
+  "tema": "Prazo para recorrer da punição",
+  "textoOficial": "...",
+  "linguagemSimples": "...",
+  "referencia": "Resolução nº 197/2023/CONSUP/IFTO, ...",
+  "pdfLocal": "normativas/01-recorte-do-professor/...pdf",
+  "pdfOficial": "https://www.ifto.edu.br/...pdf",
+  "trechoParaDestacar": "Art. 22. O estudante terá direito a recurso ..."
+}
+```
 
 Por padrão as explicações são pré-geradas e ficam em `EXPLICACOES`, em
 `normas.js`. Definindo `CONFIG_IA.endpoint` em `app.js`, o sistema passa a
