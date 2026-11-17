@@ -525,7 +525,7 @@ body[data-estado="listening"] .veu {
 @media (hover: hover) and (pointer: fine) {
   .card__acao:hover { color: var(--green-900); }
 }
-.card__acao:active { transform: scale(.94); }
+.card__acao:active { transform: scale(.95); }
 .card__acao-icone { line-height: 0; }
 .card__acao--feito { color: var(--green-900); }
 .card__avaliacao {
@@ -750,7 +750,7 @@ body[data-estado="listening"] .composer__mic::after {
 @media (hover: hover) and (pointer: fine) {
   .composer__lixeira:hover { color: var(--ink-soft); }
 }
-.composer__lixeira:active { transform: scale(.92); }
+.composer__lixeira:active { transform: scale(.95); }
 
 .composer__enviar {
   flex-shrink: 0;
@@ -862,7 +862,7 @@ body[data-estado="listening"] .composer__mic::after {
 @media (hover: hover) and (pointer: fine) {
   .modal__fechar:hover { opacity: 1; }
 }
-.modal__fechar:active { transform: scale(.92); }
+.modal__fechar:active { transform: scale(.95); }
 .modal__fechar:focus-visible { outline-color: #fff; }
 
 .modal__aviso {
@@ -1014,9 +1014,23 @@ body[data-estado="listening"] .composer__mic::after {
   .composer__enviar,
   .composer__lixeira,
   .card__ver-pdf,
-  .modal__fechar {
+  .modal__fechar,
+  .sugestao,
+  .card__acao,
+  .card__pular,
+  .relacionados__item,
+  .relacionados__resumo::before,
+  .topo__reiniciar {
     transition-duration: 120ms;
   }
+  /* sem movimento: o retorno de toque fica só na cor */
+  .sugestao:active,
+  .card__acao:active,
+  .card__ver-pdf:active,
+  .composer__enviar--ativo:active,
+  .composer__mic:not(:disabled):active,
+  .composer__lixeira:active,
+  .modal__fechar:active { transform: none; }
   .balao[data-entrando],
   .card[data-entrando],
   .aviso-bot[data-entrando] { transform: none; }
