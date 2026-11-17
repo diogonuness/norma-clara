@@ -143,6 +143,7 @@ body[data-estado="listening"] .veu {
   min-width: 0;
 }
 .topo__marca {
+  white-space: nowrap;
   font-weight: 600;
   font-size: 18px;
   color: var(--ink);
@@ -988,6 +989,16 @@ body[data-estado="listening"] .composer__mic::after {
     height: 100dvh;
     border-radius: 0;
   }
+}
+
+/* telas muito estreitas (320 px): o selo de demonstração cede espaço à marca
+   (o rodapé continua dizendo que é protótipo) e o composer aperta o
+   espaçamento para os placeholders curtos caberem numa linha */
+@media (max-width: 359px) {
+  .topo__selo { display: none; }
+  .composer { gap: 6px; }
+  .composer__input { padding-left: 12px; padding-right: 12px; }
+  .composer__campo--com-lixeira .composer__input { padding-right: 38px; }
 }
 
 /* ---------- prefers-reduced-motion ---------- */

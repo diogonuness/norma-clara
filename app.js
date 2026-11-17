@@ -252,8 +252,19 @@ const PLACEHOLDERS_CURTOS = {
   answering: 'Resposta chegando...',
   done: 'Faça outra pergunta...'
 };
+/* abaixo de 375 px (iPhone SE, 320–360 px) sobram ~150 px de campo */
+const PLACEHOLDERS_MINIMOS = {
+  idle: 'Fale ou digite aqui',
+  listening: 'Pode falar...',
+  review: '',
+  answering: 'Chegando...',
+  done: 'Outra pergunta...'
+};
 const telaEstreita = matchMedia('(max-width: 640px)');
-let PLACEHOLDERS = telaEstreita.matches ? PLACEHOLDERS_CURTOS : PLACEHOLDERS_LONGOS;
+const telaMuitoEstreita = matchMedia('(max-width: 374px)');
+const escolherPlaceholders = () => telaMuitoEstreita.matches ? PLACEHOLDERS_MINIMOS
+  : telaEstreita.matches ? PLACEHOLDERS_CURTOS : PLACEHOLDERS_LONGOS;
+let PLACEHOLDERS = escolherPlaceholders();
 const AJUDA_PADRAO = 'Pergunte com suas palavras. A resposta vem com a fonte.';
 const AJUDAS = {
   idle: AJUDA_PADRAO,
@@ -1025,11 +1036,13 @@ if (micIndisponivel) {
   $mic.setAttribute('aria-label', 'Falar pergunta (indisponível neste navegador)');
 }
 definirEstado('idle');
-telaEstreita.addEventListener('change', () => {
-  PLACEHOLDERS = telaEstreita.matches ? PLACEHOLDERS_CURTOS : PLACEHOLDERS_LONGOS;
+const trocarPlaceholders = () => {
+  PLACEHOLDERS = escolherPlaceholders();
   if (estado !== 'review') $campo.placeholder = PLACEHOLDERS[estado] || '';
   autoCrescer();
-});
+};
+telaEstreita.addEventListener('change', trocarPlaceholders);
+telaMuitoEstreita.addEventListener('change', trocarPlaceholders);
 addEventListener('resize', autoCrescer);
 if (document.fonts) document.fonts.ready.then(autoCrescer);
 })();
