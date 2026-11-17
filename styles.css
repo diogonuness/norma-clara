@@ -389,6 +389,26 @@ body[data-estado="listening"] .veu {
   padding: 3px 7px;
 }
 
+/* dica de pular a digitação: ocupa seu lugar até o fim (sem salto de layout) */
+.card__pular {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  padding: 2px 0;
+  font-size: 11px;
+  color: var(--ink-faint);
+  transition: opacity 200ms var(--ease), color 150ms var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card__pular:hover { color: var(--ink-soft); }
+}
+.card--pronto .card__pular {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms var(--ease), visibility 0s 200ms;
+}
+.card:not(.card--pronto) { cursor: pointer; }
+
 .card__rotulo {
   margin: 0 0 8px;
   font-size: 10px;

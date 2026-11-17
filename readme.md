@@ -119,6 +119,14 @@ A explicação vem sempre depois do texto e nunca o substitui. Se ela falhar, o
 texto do artigo continua na tela. As alturas dos dois blocos são reservadas antes
 da digitação começar, então o cartão não pula.
 
+A digitação segue uma linha do tempo, com pausa extra depois de `.` e `,`. O
+ritmo é de no máximo 18 ms por caractere no artigo e 55 ms na linguagem simples,
+e os tetos são de 1,4 s e 3,8 s: texto curto mantém o ritmo e texto longo é
+comprimido para caber. Do envio ao fim, uma resposta leva menos de 6 s, mesmo
+com o Art. 75 da ODP (1.729 caracteres). Um clique ou toque no card, o botão
+"Toque para ver tudo" ou a tecla `Esc` completam os textos na hora. Com
+`prefers-reduced-motion`, não há digitação: o texto aparece inteiro, com fade.
+
 "Ver PDF" abre o PDF oficial num modal, já na página do artigo e com o trecho
 destacado, nos quatro documentos. A página não é fixada no código: o visor
 procura o texto no PDF.

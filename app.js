@@ -255,6 +255,7 @@ const AJUDAS = {
 let estado = 'idle';
 let temConversa = false;
 let geracao = 0; // cancela digitações e roteiros pendentes ao reiniciar
+let digitacaoAtual = null; // função que completa a digitação em curso (pular)
 
 function definirEstado(novo, ajuda) {
   estado = novo;
@@ -328,27 +329,50 @@ function criarDigitavel() {
   return { wrap, fantasma, visivel };
 }
 
-async function digitar(digitavel, texto, opcoes) {
+/* Digitação por linha do tempo: cada caractere tem seu instante (ritmo base
+   + pausa depois de . e ,). Se o total passa do teto, a linha inteira é
+   comprimida, então texto curto mantém o ritmo e texto longo termina no teto.
+   A cada quadro aparece o que já deveria estar visível; setTimeout por
+   caractere não daria conta de 2.000 caracteres em 1,5 s.
+   controle.pular completa o texto na hora (clique no card ou Esc). */
+function digitar(digitavel, texto, opcoes) {
   const g = geracao;
   const { visivel } = digitavel;
+  const controle = opcoes.controle || {};
   if (reduzirMovimento) {
     visivel.setAttribute('data-fade', '');
     visivel.textContent = texto;
     requestAnimationFrame(() => requestAnimationFrame(() => visivel.setAttribute('data-fade', 'pronto')));
-    await esperar(130);
-    return;
+    return esperar(130);
   }
+  const chars = Array.from(texto);
+  const tempos = new Array(chars.length);
+  let t = 0;
+  chars.forEach((ch, i) => {
+    t += opcoes.msPorChar;
+    tempos[i] = t;
+    if (opcoes.pausaPontuacao && (ch === '.' || ch === ',')) t += opcoes.pausaPontuacao;
+  });
+  const escala = t > opcoes.teto ? opcoes.teto / t : 1;
+
   const cursor = el('span', 'cursor');
   const alvo = document.createTextNode('');
   visivel.append(alvo, cursor);
-  for (const ch of texto) {
-    if (g !== geracao) { cursor.remove(); return; }
-    alvo.textContent += ch;
-    let pausa = opcoes.msPorChar;
-    if (opcoes.pausaPontuacao && (ch === '.' || ch === ',')) pausa += opcoes.pausaPontuacao;
-    await esperar(pausa);
-  }
-  cursor.remove();
+  return new Promise(resolve => {
+    const inicio = performance.now();
+    let mostrados = 0;
+    const quadro = agora => {
+      if (g !== geracao) { cursor.remove(); resolve(); return; }
+      const decorrido = (agora - inicio) / escala;
+      let n = mostrados;
+      if (controle.pular) n = chars.length;
+      else while (n < chars.length && tempos[n] <= decorrido) n++;
+      if (n !== mostrados) { mostrados = n; alvo.textContent = chars.slice(0, n).join(''); }
+      if (mostrados >= chars.length) { cursor.remove(); resolve(); return; }
+      requestAnimationFrame(quadro);
+    };
+    requestAnimationFrame(quadro);
+  });
 }
 
 /* ---------- card da resposta ---------- */
@@ -387,6 +411,12 @@ function montarCard(resposta) {
   chips.append(literal
     ? el('span', 'chip-oficial', 'Texto oficial')
     : el('span', 'chip-resumo', 'Resumo · confira no PDF'));
+  if (!reduzirMovimento) {
+    /* some quando a digitação termina; o clique sobe até o card, que pula */
+    const dica = el('button', 'card__pular', 'Toque para ver tudo');
+    dica.type = 'button';
+    chips.append(dica);
+  }
   card.append(chips);
 
   card.append(el('p', 'card__rotulo', literal ? 'O que diz o artigo' : 'Resumo do artigo'));
@@ -606,22 +636,28 @@ async function mostrarResposta(resposta, g) {
   $anuncio.textContent = resposta.documento + '. ' + resposta.artigo + '. ' +
     resposta.textoOficial + ' Em linguagem simples: ' + textoSimples;
 
-  await esperar(reduzirMovimento ? 0 : 260);
+  /* pular: clique/toque no card, o botão "Toque para ver tudo" ou Esc */
+  const controle = { pular: false };
+  const pular = () => { controle.pular = true; };
+  digitacaoAtual = pular;
+  card.addEventListener('click', pular);
+
+  if (!controle.pular) await esperar(reduzirMovimento ? 0 : 150);
   if (g !== geracao) return;
 
-  /* ritmo do vídeo (18 ms e 55 ms por caractere); textos longos do motor real
-     aceleram para que nenhuma etapa passe de ~6 s e ~14 s */
-  const ritmoOficial = Math.min(18, 6000 / resposta.textoOficial.length);
-  const ritmoSimples = Math.min(55, 14000 / textoSimples.length);
-  const pausa = ritmoSimples < 55 ? Math.round(220 * ritmoSimples / 55) : 220;
-  await digitar(oficial, resposta.textoOficial, { msPorChar: ritmoOficial });
+  /* ritmo máximo de 18 ms (artigo) e 55 ms (linguagem simples) por caractere;
+     tetos de 1,4 s e 3,8 s: do envio ao fim, uma resposta fica abaixo de 6 s */
+  await digitar(oficial, resposta.textoOficial, { msPorChar: 18, teto: 1400, controle });
   if (g !== geracao) return;
-  await esperar(reduzirMovimento ? 0 : 250);
+  if (!controle.pular) await esperar(reduzirMovimento ? 0 : 150);
   if (g !== geracao) return;
-  await digitar(simples, textoSimples, { msPorChar: ritmoSimples, pausaPontuacao: pausa });
+  await digitar(simples, textoSimples, { msPorChar: 55, pausaPontuacao: 220, teto: 3800, controle });
   if (g !== geracao) return;
   if (semExplicacao) simples.visivel.classList.add('digitavel--erro');
 
+  digitacaoAtual = null;
+  card.removeEventListener('click', pular);
+  card.classList.add('card--pronto');
   definirEstado('done');
   $campo.focus({ preventScroll: true });
 }
@@ -748,8 +784,15 @@ $enviar.addEventListener('click', e => {
   responderPergunta($campo.value);
 });
 
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !digitacaoAtual) return;
+  if (!document.getElementById('modal-pdf').hidden) return;
+  digitacaoAtual();
+});
+
 $reiniciar.addEventListener('click', () => {
   geracao++;
+  digitacaoAtual = null;
   pararVoz(true);
   if (window.fecharVisorPdf) window.fecharVisorPdf();
   $conversa.innerHTML = '';
