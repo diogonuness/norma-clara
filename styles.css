@@ -183,9 +183,10 @@ body[data-estado="listening"] .veu {
 }
 
 /* ---------- hero ---------- */
+/* o centro do hero fica a ~35% da altura (não centralizado num vazio enorme) */
 .hero {
-  margin: auto 0;
-  padding: 48px 0 56px;
+  margin: max(16px, calc(35dvh - 200px)) 0 auto;
+  padding: 24px 0 40px;
   opacity: 1;
   transform: translateY(0);
   transition: opacity 200ms var(--ease), transform 200ms var(--ease);
@@ -217,6 +218,7 @@ body[data-estado="listening"] .veu {
   font-size: 15px;
   color: var(--ink-soft);
 }
+.hero__sugestoes { margin-top: 24px; }
 
 /* ---------- conversa ---------- */
 .conversa {
@@ -791,6 +793,24 @@ body[data-estado="listening"] .composer__mic::after {
 /* ---------- mobile ---------- */
 @media (max-width: 640px) {
   .hero__titulo { font-size: 32px; }
+  /* chips do hero rolam na horizontal, sem quebrar e sem barra visível,
+     encostando nas bordas da tela */
+  .hero__sugestoes {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+  .hero__sugestoes::-webkit-scrollbar { display: none; }
+  .hero__sugestoes .sugestao {
+    flex-shrink: 0;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
   .faixa__interno { padding-left: 16px; padding-right: 16px; }
   .palco, .topo { padding-left: 16px; padding-right: 16px; }
   .faixa__ajuda { margin-left: 0; }

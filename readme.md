@@ -257,18 +257,20 @@ A estrutura do pipeline, porém, é a mesma. Trocar cada peça não muda o desen
 node testes.js
 ```
 
-O arquivo `testes.js` traz o conjunto de perguntas-gabarito: 50 perguntas
+O arquivo `testes.js` traz o conjunto de perguntas-gabarito: 54 perguntas
 escritas como um aluno ou um professor perguntaria, cada uma com o id do artigo
-que deve vir em primeiro lugar. Quatro delas são sobre assuntos fora do acervo e
-devem levar à abstenção.
+que deve vir em primeiro lugar. Quatro delas são os chips de sugestão do estado
+inicial, e outras quatro são sobre assuntos fora do acervo e devem levar à
+abstenção.
 
 A comparação é pelo id, não pelo número do artigo, porque o número se repete
 entre documentos — "Art. 74" existe na ODP e na POLAE. Comparando por número, o
 teste passaria mesmo trazendo o artigo certo do documento errado.
 
-Hoje o resultado é 50 de 50. Ele também confere a integridade da base: ids
-duplicados, artigo sem explicação, explicação órfã, campo vazio e link que não
-entrega o PDF direto.
+Hoje o resultado é 54 de 54. Ele também confere a integridade da base: ids
+duplicados, artigo sem explicação, explicação órfã, campo vazio, link que não
+entrega o PDF direto, artigo sem tema e pergunta-exemplo de tema que não traz
+artigo do próprio tema.
 
 Rode antes de cada commit que mexa em `normas.js`. Documento novo pode roubar o
 resultado de pergunta que já funcionava, e tag nova pode colidir com palavra de

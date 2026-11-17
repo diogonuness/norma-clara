@@ -764,6 +764,9 @@ $reiniciar.addEventListener('click', () => {
 });
 
 /* ---------- estado inicial ---------- */
+document.querySelectorAll('#sugestoes-iniciais .sugestao').forEach(b => {
+  b.addEventListener('click', () => perguntarDireto(b.textContent));
+});
 $seloDemo.hidden = !MODO_DEMO;
 $rodape.textContent = MODO_DEMO
   ? 'Protótipo acadêmico · Explicações pré-geradas para demonstração · Fonte oficial disponível em cada resposta.'

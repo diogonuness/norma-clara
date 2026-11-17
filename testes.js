@@ -89,6 +89,12 @@ const CASOS = [
   ['quantas horas pra orientar TCC', 'doc-34'],
   ['o que e RESAD', 'doc-49'],
 
+  // --- Chips de sugestão do estado inicial (index.html) ---
+  ['Perdi a prova, e agora?', 'odp-75'],
+  ['Posso recorrer de uma advertência?', 'disc-22'],
+  ['Quanto é o auxílio estudantil?', 'polae-65'],
+  ['Posso trancar o curso?', 'odp-110'],
+
   // --- Abstenção: perguntas fora do acervo ---
   ['A biblioteca abre no sábado?', 'ABSTENCAO'],
   ['qual o horario do RU', 'ABSTENCAO'],
